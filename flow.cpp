@@ -1,6 +1,7 @@
 
 int main()
 {
+  react_cpp::graph tcp_graph();
   auto src = framework.get_src();
   auto tcp_receiver = framework.get_src();
 
@@ -11,6 +12,8 @@ int main()
 
   // TCP RX
   tcp_receiver["port22"] >> ftp_parser >> file_writer["~/received_file"];
+
+  tcp_graph.wait(INFINITE /* timeout */, INFINITE /* number of loop */);
 
   return 0;
 }
