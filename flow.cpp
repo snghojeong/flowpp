@@ -7,7 +7,8 @@ int main()
 
   // TCP TX
   src >> json_builder >> http_builder >> tcp_sender; 
-  tcp_receiver["port80"] >> http_parser["Contents-Type:application/json"] >> json_view;
+  tcp_receiver["port80"] >> http_parser;
+                            http_parser["Contents-Type:application/json"] >> json_view;
                             http_parser["Contents-Type:plain/text"] >> [] (const std::string& txt) { cout << txt; };
 
   // TCP RX
