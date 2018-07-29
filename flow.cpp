@@ -2,8 +2,8 @@
 int main()
 {
   react_cpp::graph tcp_graph();
-  auto src = framework.get_src();
-  auto tcp_receiver = framework.get_src();
+  auto src = framework.get_src<src>();
+  auto tcp_receiver = framework.get_src<tcp_receiver>();
 
   // TCP TX
   src >> json_builder >> http_builder >> tcp_sender; 
