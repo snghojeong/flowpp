@@ -2,11 +2,12 @@
 #define _OBSERVER_HPP_
 
 class data;
+class observable;
 
 class observer {
 public:
-  virtual void notify(data& dt) = 0;
-  void subscribe(observable& obsvl) { obsvl.add(this); };
+  virtual void notify(data& dat) = 0;
+  void subscribe(observable& obsbl) { obsbl.add(this); }
 };
 
 #endif
