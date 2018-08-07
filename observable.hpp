@@ -10,8 +10,8 @@ public:
   virtual ~observable() {}
 
   virtual void emit() {
-    std::transform(_dat_list.begin(), _dat_list.end(), nullptr, [] (data& dat) {
-        std::transform(_obs_list.begin(), _obs_list.end(), nullptr, [] (observer& obs) { obs.notify(dat); });
+    std::for_each(_dat_list.begin(), _dat_list.end(), [] (data& dat) {
+        std::for_each(_obs_list.begin(), _obs_list.end(), [] (observer& obs) { obs.notify(dat); });
         });
   }
   void add(observer& obs) { _obs_list.push_back(obs); }
