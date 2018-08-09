@@ -1,10 +1,10 @@
-# ReactiveCpp
+# ReactiveModernCpp
 Reactive framework for Modern C++
 
 Introduction
 ------------
 
-ReactiveCpp is a library which enable you to implement software by reactive programming.  
+ReactiveModernCpp is a library which enable you to implement software by reactive programming.  
 Reactive programming is not a easy programming paradigm but basically focus on "data flow" of a software.  
 The initial concept of ReactiveCpp is that programmer can use two abstract class "observer" and "observable".  
 And these two classes are the basic component of data flow.  
