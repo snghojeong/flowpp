@@ -16,3 +16,16 @@ public:
     this->add(data_factory.get(str));
   }
 };
+
+void main() {
+
+  react_cpp::graph key_graph();
+  auto scann = key_graph.get<key_scanner>();
+  auto print = key_graph.get<printer>();
+
+  scann >> print;
+
+  key_graph.wait(INFINITE /* timeout */, INFINITE /* number of loop */);
+  
+  return;
+}
