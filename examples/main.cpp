@@ -13,7 +13,7 @@ public:
   void poll() {
     std::string str;
     std::cin >> str;
-    this->add(data_factory.get(str));
+    this->add(data_factory.get(str /* get is template method but the method is able to deduce its type */ ));
   }
 };
 
