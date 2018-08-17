@@ -1,6 +1,8 @@
 #ifndef _OBSERVERABLE_HPP_
 #define _OBSERVERABLE_HPP_
 
+namespace react_cpp {
+
 class data;
 class observer;
 
@@ -20,6 +22,8 @@ public:
 private:
   std::list<observer&> _obs_list;
   std::list<data&> _dat_list;
+};
+
 };
 
 #endif

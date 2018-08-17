@@ -1,6 +1,8 @@
 #ifndef _DATA_H_
 #define _DATA_H_
 
+namespace react_cpp {
+
 template <typename T>
 class data<T> {
 public:
@@ -18,6 +20,8 @@ public:
 
 private:
   T _val;
+};
+
 };
 
 #endif
