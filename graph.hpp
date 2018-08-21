@@ -7,12 +7,15 @@ class graph {
 public:
 template <typename T>
   T get() {
-    T isnt;
+    T *inst = new T();
+    obsbl_list.push_back(inst);
     return inst;
   }
 
 };
 
+private:
+  std::list<observable*> obsbl_list;
 };
 
 #endif
