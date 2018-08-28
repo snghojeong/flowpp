@@ -19,7 +19,7 @@ int main()
 {
   react_cpp::graph cnt_graph();
 
-  auto cnter = cnt_graph();
+  auto cnter = cnt_graph.get<counter>();
 
   cnt_graph.wait(0 /* timeout */, 10 /* numnber of loop */);
 
