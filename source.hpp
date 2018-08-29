@@ -1,15 +1,16 @@
-#ifndef _DATA_H_
-#define _DATA_H_
+#ifndef _SOURCE_H_
+#define _SOURCE_H_
+
+#include <observable.hpp>
 
 namespace react_cpp {
 
-template<typename T>
 class source : public observable {
 public:
   explicit source() { }
   virtual ~source() { }
 
-  data<T> generate() = 0;
+  virtual data* generate() = 0;
 };
 
 };
