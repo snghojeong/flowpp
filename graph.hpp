@@ -1,6 +1,8 @@
 #ifndef _GRAPH_H_
 #define _GRAPH_H_
 
+#include <type_traits>
+
 namespace react_cpp {
 
 class source;
@@ -11,30 +13,29 @@ public:
 
   template <typename T>
   T& get() {
+    static_assert(std::is_base_of<observable, T>::value, "T must inherit from observable");
     T *inst = new T();
     _obsbl_list.push_back(inst);
+    if (std::is_base_of<source,T>::value) {
+      _src_list.push_back(inst);
+    }
     return *inst;
   }
 
-  template <source>
-  source& get() {
-    source *inst = new source();
-    _obsbl_list.push_back(inst);
-    _src_list.push_back(inst);
-    return *inst;
-  }
-
-  void wait() {
+  void wait(unsigned int loop) {
     while (1)
+      std::for_each(_src_list.begin(), _src_list.end(), 
+          [] (source* src) { src->add(std::shared_ptr<data>(src->generate())); });
+
       std::for_each(_obsbl_list.begin(), _obsbl_list.end(), 
           [] (observable* obsbl) { obsbl->emit(); });
   }
 
-};
-
 private:
   std::list<observable*> _obsbl_list;
   std::list<source*> _src_list;
+};
+
 };
 
 #endif
