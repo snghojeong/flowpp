@@ -20,7 +20,7 @@ public:
 
   virtual void emit() {
     std::for_each(_dat_list.begin(), _dat_list.end(), [this] (std::shared_ptr<data> dat) {
-        std::for_each(_obs_list.begin(), _obs_list.end(), [] (std::shared_ptr<data> obs) { obs->notify(*dat); });
+        std::for_each(_obs_list.begin(), _obs_list.end(), [=] (std::shared_ptr<observer> obs) { obs->notify(*dat); });
         });
   }
 
