@@ -23,7 +23,8 @@ public:
   }
 
   void wait(unsigned int loop) {
-    while (1)
+    decltype(loop) cnt = 0;
+    while ((loop == 0) || (cnt++ < loop))
       std::for_each(_src_list.begin(), _src_list.end(), 
           [] (source* src) { src->add(std::shared_ptr<data>(src->generate())); });
 

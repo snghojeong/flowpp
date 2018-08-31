@@ -10,6 +10,7 @@ public:
   virtual ~counter() {}
 
   react_cpp::data* generate() {
+    std::cout << "_cnt: " << _cnt << std::endl;
     return new react_cpp::data_impl(_cnt++);
   }
 
@@ -25,7 +26,7 @@ int main()
 {
   react_cpp::graph cnt_graph;
 
-  auto cnter = cnt_graph.get<counter>();
+  auto& cnter = cnt_graph.get<counter>();
 
   cnt_graph.wait(/* 0 timeout, */ 10 /* numnber of loop */);
 
