@@ -1,12 +1,12 @@
-# ReactiveModernCpp
-Reactive framework for Modern C++
+# dataflow
+Let's make dataflow graph easily with modern c++
 
 Introduction
 ------------
 
-ReactiveModernCpp is a library which enable you to implement software by reactive programming.  
-Reactive programming is not a easy programming paradigm but basically focus on "data flow" of a software.  
-The initial concept of ReactiveCpp is that programmer can use two abstract class "observer" and "observable".  
+dataflow is a library which enable you to implement software by Dataflow programming.  
+Dataflow programming is not a easy programming paradigm but basically focus on "data flow" of a software.  
+The initial concept of dataflow is that programmer can use two abstract class "observer" and "observable".  
 And these two classes are the basic component of data flow.  
 
 observable >> observer  
