@@ -7,6 +7,8 @@ class data {
 public:
   explicit data() { }
   virtual ~data() { }
+
+  virtual std::string& type() = 0;
 };
 
 };
