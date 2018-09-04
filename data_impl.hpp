@@ -8,8 +8,12 @@ namespace react_cpp {
 template<typename T>
 class data_impl : public data {
 public:
-  explicit data_impl(T val) { _val = val; }
+  explicit data_impl(T val, std::string& type) : _val(val), _type(type) { }
   virtual ~data_impl() { }
+
+  virtual std::string& type() {
+    return _type;
+  }
 
   data_impl& operator = (const T& operand) {
     _val = operand;
@@ -23,6 +27,7 @@ public:
 
 private:
   T _val;
+  std::string _type;
 };
 
 };
