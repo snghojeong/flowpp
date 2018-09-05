@@ -8,10 +8,10 @@ namespace react_cpp {
 template<typename T>
 class data_impl : public data {
 public:
-  explicit data_impl(T val, std::string& type) : _val(val), _type(type) { }
+  explicit data_impl(T val, const char* type) : _val(val), _type(type) { }
   virtual ~data_impl() { }
 
-  virtual std::string& type() {
+  virtual const std::string& type() {
     return _type;
   }
 

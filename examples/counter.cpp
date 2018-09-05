@@ -11,7 +11,7 @@ public:
 
   react_cpp::data* generate() {
     std::cout << "_cnt: " << _cnt << std::endl;
-    return new react_cpp::data_impl(_cnt++);
+    return new react_cpp::data_impl(_cnt++, "unsigned int");
   }
 
   unsigned int get() {
