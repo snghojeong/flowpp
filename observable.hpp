@@ -6,7 +6,9 @@
 #endif
 
 #include <memory>
+#include <map>
 #include <list>
+#include <string>
 #include <data.hpp>
 
 namespace react_cpp {
@@ -27,7 +29,7 @@ public:
   void add(std::shared_ptr<data> dat) { _dat_list.push_back(dat); }
 
 private:
-  std::list<std::shared_ptr<observer>> _obs_list;
+  std::map<std::string, std::shared_ptr<observer>> _obs_map;
   std::list<std::shared_ptr<data>> _dat_list;
 };
 
