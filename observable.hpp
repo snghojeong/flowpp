@@ -22,11 +22,14 @@ public:
 
   virtual void emit() {
     std::for_each(_dat_list.begin(), _dat_list.end(), [this] (std::shared_ptr<data> dat) {
-        std::for_each(_obs_list.begin(), _obs_list.end(), [=] (std::shared_ptr<observer> obs) { obs->notify(*dat); });
+        std::for_each(_obs_list.begin(), _obs_list.end(), [=] (std::shared_ptr<observer> obs) { if (this->compare(pair.first, dat->type()) obs->notify(*dat); });
         });
   }
 
   void add(std::shared_ptr<data> dat) { _dat_list.push_back(dat); }
+  void add(std::shared_ptr<observer> obs, std::string key = "*") { _obs_map.insert( { key, obs } ); }
+
+  virtual bool compare(const std::string& key, const std::string& dat) = 0;
 
 private:
   std::map<std::string, std::shared_ptr<observer>> _obs_map;
