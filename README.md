@@ -16,6 +16,8 @@ The class could be ether "observable" and "observer" then you can express it lik
 
 observable >> the class : observable, observer >> observer
 
-And we can use filter to get specific type of data from observable
+And we can use filter to get specific type of data from observable.
 
 observable[filter] >> observer
+
+observer will get data only filtered.
