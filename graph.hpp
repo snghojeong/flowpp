@@ -11,6 +11,7 @@ public:
   explicit graph() {}
   virtual ~graph() { std::for_each(_obsbl_list.begin(), _obsbl_list.end(), [] (observable* obsbl) { delete obsbl; }); }
 
+  // get observable from graph registered the list of observable on graph.
   template <typename T>
   T& get() {
     static_assert(std::is_base_of<observable, T>::value, "T must inherit from observable");
