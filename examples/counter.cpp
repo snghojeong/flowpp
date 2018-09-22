@@ -14,6 +14,12 @@ public:
     return new react_cpp::data_impl(_cnt++, "unsigned int");
   }
 
+  bool compare(const std::string& key, const std::string& dat) {
+    if (key == "*") return true;
+    else if (key == "uint") return true;
+    else return false;
+  }
+
   unsigned int get() {
     return _cnt;
   }
