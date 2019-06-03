@@ -4,20 +4,14 @@
 #include <data_impl.hpp>
 #include <graph.hpp>
 
-class counter : public react_cpp::source {
+class counter : public flowpp::source {
 public:
   explicit counter() { _cnt = 0; }
   virtual ~counter() {}
 
-  react_cpp::data* generate() {
+  std::shared_ptr<flowpp::data> generate() {
     std::cout << "_cnt: " << _cnt << std::endl;
-    return new react_cpp::data_impl(_cnt++, "unsigned int");
-  }
-
-  bool compare(const std::string& key, const std::string& dat) {
-    if (key == "*") return true;
-    else if (key == "uint") return true;
-    else return false;
+    return std::make_shared<flowpp::data_impl>(_cnt++);
   }
 
   unsigned int get() {
@@ -30,11 +24,11 @@ private:
 
 int main()
 {
-  react_cpp::graph cnt_graph;
+  flowpp::graph cnt_graph;
 
-  auto& cnter = cnt_graph.get<counter>();
+  auto cnter = cnt_graph.get<counter>();
 
-  cnt_graph.wait(/* 0 timeout, */ 10 /* numnber of loop */);
+  cnt_graph.wait(INFINITE/* timeout */, 10 /* numnber of loop */);
 
   std::cout << cnter.get() << std::endl; // print 10
 
