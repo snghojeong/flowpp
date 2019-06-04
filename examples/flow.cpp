@@ -1,18 +1,22 @@
 
+using port = flowpp::network::port;
+using content_type = flowpp::network::http::content_type;
+
 int main()
 {
-  react_cpp::graph tcp_graph();
-  auto src = framework.get_src<src>();
-  auto tcp_receiver = framework.get_src<tcp_receiver>();
+  flowpp::graph tcp_graph();
+  auto src = tcp_graph.get<src>();
+  auto tcp_rx = tcp_graph.get<tcp_receiver>();
+  auto tcp_tx = tcp_graph.get<tcp_sender>();
 
-  // TCP TX
-  src >> json_builder >> http_builder >> tcp_sender; 
-  tcp_receiver[80 /*port*/] >> http_parser;
-                            http_parser["Contents-Type:application/json"] >> json_view;
-                            http_parser["Contents-Type:plain/text"] >> [] (const std::string& txt) { cout << txt; };
+  // HTTP
+  src >> json_builder >> http_builder >> tcp_tx; 
+  tcp_rx[port(80)] >>   http_parser;
+                        http_parser[content_type("application/json")] >> json_view;
+                        http_parser[content_type("plain/text")] >> [] (const std::string& txt) { cout << txt; };
 
-  // TCP RX
-  tcp_receiver[22 /*port*/] >> ftp_parser >> file_writer["~/received_file"];
+  // FTP
+  tcp_rx[port(22)] >> ftp_parser >> file_writer["~/received_file"];
 
   tcp_graph.wait(INFINITE /* timeout */, INFINITE /* number of loop */);
 
