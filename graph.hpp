@@ -3,24 +3,21 @@
 
 #include <type_traits>
 
-namespace react_cpp {
+namespace flowpp {
 
 class source;
 class graph {
 public:
   explicit graph() {}
-  virtual ~graph() { std::for_each(_obsbl_list.begin(), _obsbl_list.end(), [] (observable* obsbl) { delete obsbl; }); }
+  virtual ~graph() { std::for_each(_obsvl_list.begin(), _obsvl_list.end(), [] (observable* obsvl) { delete obsvl; }); }
 
   // get observable from graph registered the list of observable on graph.
   template <typename T>
-  T& get() {
+  std::shared_ptr<T> get() {
     static_assert(std::is_base_of<observable, T>::value, "T must inherit from observable");
-    T *inst = new T();
-    _obsbl_list.push_back(inst);
-    if (std::is_base_of<source,T>::value) {
-      _src_list.push_back(inst);
-    }
-    return *inst;
+    auto inst = make_shared<T>();
+    _obsvl_list.push_back(inst);
+    return inst;
   }
 
   void wait(unsigned int loop) {
@@ -29,13 +26,12 @@ public:
       std::for_each(_src_list.begin(), _src_list.end(), 
           [] (source* src) { src->add(std::shared_ptr<data>(src->generate())); });
 
-      std::for_each(_obsbl_list.begin(), _obsbl_list.end(), 
+      std::for_each(_obsvl_list.begin(), _obsvl_list.end(), 
           [] (observable* obsbl) { obsbl->emit(); });
   }
 
 private:
-  std::list<observable*> _obsbl_list;
-  std::list<source*> _src_list;
+  std::list<std::shared_ptr<observable>> _obsvl_list;
 };
 
 };
