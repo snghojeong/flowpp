@@ -20,12 +20,9 @@ public:
     return inst;
   }
 
-  void wait(unsigned int loop) {
+  void wait(unsigned long timeout, unsigned long loop) {
     decltype(loop) cnt = 0;
     while ((loop == 0) || (cnt++ < loop))
-      std::for_each(_src_list.begin(), _src_list.end(), 
-          [] (source* src) { src->add(std::shared_ptr<data>(src->generate())); });
-
       std::for_each(_obsvl_list.begin(), _obsvl_list.end(), 
           [] (observable* obsbl) { obsbl->emit(); });
   }
