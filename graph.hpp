@@ -21,10 +21,13 @@ public:
   }
 
   void wait(unsigned long timeout, unsigned long loop) {
+    decltype(timeout) start_time = curr_time = 0;
     decltype(loop) cnt = 0;
-    while ((loop == 0) || (cnt++ < loop))
+    while ((loop == 0) || ((cnt++ < loop) && (start_time + timeout > curr_time))) {
       std::for_each(_obsvl_list.begin(), _obsvl_list.end(), 
           [] (observable* obsbl) { obsbl->emit(); });
+      curr_time = millis();
+    }
   }
 
 private:
