@@ -11,7 +11,7 @@
 #include <string>
 #include <data.hpp>
 
-namespace react_cpp {
+namespace flowpp {
 
 class observable {
   using string = std::string;
