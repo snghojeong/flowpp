@@ -3,7 +3,7 @@
 
 #include <data.hpp>
 
-namespace react_cpp {
+namespace flowpp {
 
 template<typename T>
 class data_impl : public data {
