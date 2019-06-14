@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace react_cpp {
+namespace flowpp {
 
 class data {
 public:

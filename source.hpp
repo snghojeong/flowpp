@@ -3,7 +3,7 @@
 
 #include <observable.hpp>
 
-namespace react_cpp {
+namespace flowpp {
 
 class source : public observable {
 public:

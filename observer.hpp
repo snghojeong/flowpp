@@ -1,7 +1,7 @@
 #ifndef _OBSERVER_HPP_
 #define _OBSERVER_HPP_
 
-namespace react_cpp {
+namespace flowpp {
 
 class data;
 class observer {
