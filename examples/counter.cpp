@@ -1,7 +1,6 @@
 #include <iostream>
 
-#include <source.hpp>
-#include <data_impl.hpp>
+#include <observable.hpp>
 #include <graph.hpp>
 
 class counter : public flowpp::source {
