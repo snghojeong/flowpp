@@ -26,15 +26,13 @@ public:
   virtual void emit() {
     std::for_each(_dat_list.begin(), _dat_list.end(), [this] (data_sptr dat) {
       std::for_each(_obs_map.begin(), _obs_map.end(), [=] (std::pair<filter, observer_sptr> obs) { 
-        if (this->compare(pair.first, dat->type()) pair.second->notify(*dat); 
+        pair.second->notify(dat); 
       });
     });
   }
 
   void add(data_sptr dat) { _dat_list.push_back(dat); }
   void add(observer_sptr obs, filter fltr = filter()) { _obs_map.insert( { fltr, obs } ); }
-
-  virtual bool compare(const string& key, const string& dat) = 0;
 
 private:
   std::map<string, observer_sptr> _obs_map;

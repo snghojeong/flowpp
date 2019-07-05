@@ -5,8 +5,10 @@ namespace flowpp {
 
 class data;
 class observer {
+  using data_sptr = std::shared_ptr<data>;
+
 public:
-  virtual void notify(data& dat) = 0;
+  virtual void notify(data_sptr& dat) = 0;
 };
 
 };

@@ -9,7 +9,7 @@ class source;
 class graph {
 public:
   explicit graph() {}
-  virtual ~graph() { std::for_each(_obsvl_list.begin(), _obsvl_list.end(), [] (observable* obsvl) { delete obsvl; }); }
+  virtual ~graph() { }
 
   // get observable from graph registered the list of observable on graph.
   template <typename T>
