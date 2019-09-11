@@ -4,9 +4,9 @@ Let's make dataflow graph easily with modern c++
 Introduction
 ------------
 
-dataflow is a library which enable you to implement software by Dataflow programming.  
+flowpp is a library which enable you to implement software by Dataflow programming.  
 Dataflow programming is not a easy programming paradigm but basically focus on "data flow" of a software.  
-The initial concept of dataflow is that programmer can use two abstract class "observer" and "observable".  
+The initial concept of flowpp is that programmer can use two abstract class "observer" and "observable".  
 And these two classes are the basic component of data flow.  
 
 observable >> observer  
