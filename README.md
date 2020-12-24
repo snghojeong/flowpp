@@ -1,6 +1,3 @@
-# dataflow
-Let's make dataflow graph easily with modern c++
-
 Introduction
 ------------
 
