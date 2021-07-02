@@ -10,7 +10,7 @@ public:
   explicit data() { }
   virtual ~data() { }
 
-  virtual const std::string& type() = 0;
+  virtual const format& format() = 0;
 };
 
 };
