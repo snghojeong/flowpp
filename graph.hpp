@@ -6,6 +6,7 @@
 namespace flowpp {
 
 class source;
+class target;
 class graph {
 public:
   explicit graph() {}
