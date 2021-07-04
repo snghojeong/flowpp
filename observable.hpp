@@ -23,7 +23,7 @@ public:
   explicit observable() {}
   virtual ~observable() {}
 
-  virtual void emit() {
+  virtual void process() {
     std::for_each(_dat_list.begin(), _dat_list.end(), [this] (data_sptr dat) {
       std::for_each(_obs_map.begin(), _obs_map.end(), [=] (std::pair<filter, observer_sptr> obs) { 
         pair.second->notify(dat); 
