@@ -4,7 +4,7 @@
 namespace flowpp {
 
 class source : public observable {
-  using data_sptr = std::shared_ptr<data>;
+  using data_sptr = std::unique_ptr<data>;
 
 public:
   explicit source() {}
