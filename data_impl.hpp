@@ -11,8 +11,8 @@ public:
   explicit data_impl(T val, const char* type) : _val(val), _type(type) { }
   virtual ~data_impl() { }
 
-  virtual const std::string& type() {
-    return _type;
+  virtual const format& format() {
+    return _format;
   }
 
   data_impl& operator = (const T& operand) {
