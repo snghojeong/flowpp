@@ -14,7 +14,7 @@ public:
 
   // get observable from graph registered the list of observable on graph.
   template <typename T>
-  std::shared_ptr<T> get() {
+  std::unique_ptr<T> get() {
     static_assert(std::is_base_of<observable, T>::value, "T must inherit from observable");
     auto inst = make_shared<T>();
     _obsvl_list.push_back(inst);
