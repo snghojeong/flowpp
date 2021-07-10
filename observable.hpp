@@ -15,8 +15,8 @@ namespace flowpp {
 
 class observable {
   using string = std::string;
-  using data_sptr = std::shared_ptr<data>;
-  using observer_sptr = std::shared_ptr<observer>;
+  using data_sptr = std::unique_ptr<data>;
+  using observer_sptr = std::unique_ptr<observer>;
   friend class observer;
 
 public:
