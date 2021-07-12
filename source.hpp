@@ -4,7 +4,7 @@
 namespace flowpp {
 
 class source : public observable {
-  using data_sptr = std::unique_ptr<data>;
+  using data_ptr = std::unique_ptr<data>;
 
 public:
   explicit source() {}
@@ -15,7 +15,7 @@ public:
     observable::emit();
   }
 
-  virtual data_sptr generate() = 0; 
+  virtual data_ptr generate() = 0; 
 };
 
 };
