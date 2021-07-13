@@ -16,7 +16,7 @@ public:
   template <typename T>
   std::unique_ptr<T> get() {
     static_assert(std::is_base_of<observable, T>::value, "T must inherit from observable");
-    auto inst = make_shared<T>();
+    auto inst = make_unique<T>();
     _obsvl_list.push_back(inst);
     return inst;
   }
