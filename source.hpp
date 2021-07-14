@@ -12,7 +12,7 @@ public:
 
   virtual void emit() {
     this->add(this->generate());
-    observable::emit();
+    this->emit();
   }
 
   virtual data_ptr generate() = 0; 
