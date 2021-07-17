@@ -32,7 +32,7 @@ public:
   }
 
 private:
-  std::list<std::shared_ptr<observable>> _obsvl_list;
+  std::list<std::unique_ptr<observable>> _obsvl_list;
 };
 
 };
