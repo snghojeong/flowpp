@@ -5,10 +5,10 @@ namespace flowpp {
 
 class data;
 class observer {
-  using data_sptr = std::unique_ptr<data>;
+  using data_ptr = std::unique_ptr<data>;
 
 public:
-  virtual void notify(data_sptr& dat) = 0;
+  virtual void notify(data_ptr& dat) = 0;
 };
 
 };
