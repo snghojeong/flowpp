@@ -9,7 +9,7 @@ class source;
 class target;
 class graph {
 public:
-  explicit graph() {}
+  explicit graph() { }
   virtual ~graph() { }
 
   // get observable from graph registered the list of observable on graph.
