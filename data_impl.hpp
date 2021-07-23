@@ -27,7 +27,7 @@ public:
 
 private:
   T _val;
-  std::string _type;
+  format _format;
 };
 
 };
