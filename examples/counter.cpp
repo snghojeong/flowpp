@@ -8,9 +8,9 @@ public:
   explicit counter() { _cnt = 0; }
   virtual ~counter() {}
 
-  std::shared_ptr<flowpp::data> generate() {
+  std::unique_ptr<flowpp::data> generate() {
     std::cout << "_cnt: " << _cnt << std::endl;
-    return std::make_shared<flowpp::data_impl>(_cnt++);
+    return std::make_unique<flowpp::data_impl>(_cnt++);
   }
 
   unsigned int get() {
