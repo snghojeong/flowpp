@@ -15,6 +15,6 @@ observable >> the class : observable, observer >> observer
 
 And we can use filter to get specific type of data from observable.
 
-observable[filter] >> observer
+observable[filter exp] >> observer
 
 observer will get data only filtered. If you indicate filter as "\*" observer will get all data emited by observable.
