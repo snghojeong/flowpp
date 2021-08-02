@@ -10,7 +10,7 @@ int main()
   auto tcp_tx = tcp_graph.get<tcp_sender>();
 
   // HTTP
-  src >> json_builder >> http_builder >> tcp_tx; 
+  src["JSON"] >> json_builder >> http_builder >> tcp_tx; 
   tcp_rx[port(80)] >>   http_parser;
                         http_parser[content_type("application/json")] >> json_view;
                         http_parser[content_type("plain/text")] >> [] (const std::string& txt) { cout << txt; };
