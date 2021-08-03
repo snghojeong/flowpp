@@ -27,7 +27,7 @@ int main()
 
   auto cnter = cnt_graph.get<counter>();
 
-  cnt_graph.wait(INFINITE/* timeout */, 10 /* numnber of loop */);
+  cnt_graph.run(INFINITE/* timeout */, 10 /* numnber of loop */);
 
   std::cout << cnter.get() << std::endl; // print 10
 
