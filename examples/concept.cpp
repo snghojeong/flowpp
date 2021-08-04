@@ -29,7 +29,7 @@ void main() {
 
   scann >> print;
 
-  key_graph.wait(INFINITE /* timeout */, INFINITE /* number of loop */);
+  key_graph.run(INFINITE /* timeout */, INFINITE /* number of loop */);
   
   return;
 }
