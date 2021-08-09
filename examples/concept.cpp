@@ -23,13 +23,12 @@ public:
 
 void main() {
 
-  flowpp::graph key_graph();
-  auto scann = key_graph.get<key_scanner>();
-  auto print = key_graph.get<printer>();
+  auto scann = key_scanner();
+  auto print = txt_printer();
 
   scann >> print;
 
-  key_graph.run(INFINITE /* timeout */, INFINITE /* number of loop */);
+  scanner.run(INFINITE /* timeout */, INFINITE /* number of loop */);
   
   return;
 }
