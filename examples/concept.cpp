@@ -5,8 +5,8 @@ namespace flowpp {
 
 class printer : public observer {
 public:
-  virtual void notify(data& dat) {
-    std::cout << dat.value() << std::endl;
+  virtual void notify(data& d) {
+    std::cout << d.value() << std::endl;
   }
 };
 
