@@ -17,6 +17,8 @@ public:
     std::cin >> str;
     return data(str); // data is template class but compiler is able to deduce its type */
   }
+
+  data interrupt() = 0;
 };
 
 }
