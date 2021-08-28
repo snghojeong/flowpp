@@ -8,7 +8,7 @@ public:
   explicit data() { }
   virtual ~data() { }
 
-  virtual const format& format() = 0;
+  virtual const format& format() const = 0;
 };
 
 };
