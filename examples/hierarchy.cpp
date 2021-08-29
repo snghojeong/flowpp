@@ -4,7 +4,8 @@ using content_type = flowpp::network::http::content_type;
 class http_flow_container : public observer, public observable {
 public:
   explicit flow_container() {
-    this >> json_builder >> http_builder[content_type("application/json")] >> this;
+    json_encoder json_enc;
+    this >> json_enc >> http_builder[content_type("application/json")] >> this;
   }
 
   virtual ~flow_container() { }
