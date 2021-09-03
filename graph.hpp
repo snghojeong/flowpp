@@ -11,8 +11,7 @@ class graph {
 public:
   explicit graph() { }
   virtual ~graph() { }
-
-  // get observable from graph registered the list of observable on graph.
+  
   template <typename T>
   std::unique_ptr<T> get() {
     static_assert(std::is_base_of<observable, T>::value, "T must inherit observable");
