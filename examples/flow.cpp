@@ -16,7 +16,7 @@ int main()
                         http_parser[content_type("plain/text")] >> [] (const std::string& txt) { cout << txt; };
 
   // FTP
-  tcp_rx[port(22)] >> ftp_parser >> file_writer["~/received_file"];
+  tcp_rx[port(22)] >> ftp_parser >> file_writer("~/received_file");
 
   tcp_graph.wait(INFINITE /* timeout */, INFINITE /* number of loop */);
 
