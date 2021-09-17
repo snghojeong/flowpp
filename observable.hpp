@@ -15,7 +15,7 @@ namespace flowpp {
 
 class observable {
   using string = std::string;
-  using data_ptr = std::unique_ptr<data>;
+  using data_uptr = std::unique_ptr<data>;
   using observer_ptr = std::unique_ptr<observer>;
   friend class observer;
 
@@ -24,19 +24,19 @@ public:
   virtual ~observable() {}
 
   virtual void process() {
-    std::for_each(_dat_list.begin(), _dat_list.end(), [this] (data_ptr dat) {
+    std::for_each(_dat_list.begin(), _dat_list.end(), [this] (data_uptr dat) {
       std::for_each(_obs_map.begin(), _obs_map.end(), [=] (std::pair<filter, observer_ptr> obs) { 
         pair.second->notify(dat); 
       });
     });
   }
 
-  void add(data_ptr dat) { _dat_list.push_back(dat); }
+  void add(data_uptr dat) { _dat_list.push_back(dat); }
   void add(observer_ptr obs, filter fltr = filter()) { _obs_map.insert( { fltr, obs } ); }
 
 private:
   std::map<string, observer_ptr> _obs_map;
-  std::list<data_ptr> _dat_list;
+  std::list<data_uptr> _dat_list;
 };
 
 };
