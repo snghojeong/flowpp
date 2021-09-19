@@ -1,7 +1,7 @@
 
 using content_type = flowpp::network::http::content_type;
 
-class http_flow_container : public observer, public observable {
+class http_flow_container : public emitter, public receiver {
 public:
   explicit flow_container() {
     json_encoder json_enc;
