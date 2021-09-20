@@ -3,6 +3,8 @@
 
 namespace flowpp {
 
+using data_uptr = std::unique_ptr<data>
+
 class printer : public observer {
 public:
   virtual void notify(data& d) {
