@@ -9,7 +9,7 @@ using fltr_uptr = std::unique_ptr<filter>;
 class printer : public observer {
 public:
   virtual void notify(data& d) {
-    std::cout << d.value() << std::endl;
+    std::cout << d.val() << std::endl;
   }
 };
 
