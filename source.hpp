@@ -11,7 +11,7 @@ public:
   virtual ~source() {}
 
   virtual void emit() {
-    this->add(this->generate());
+    this->generate();
     this->emit();
   }
 
