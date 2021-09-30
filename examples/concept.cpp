@@ -1,8 +1,6 @@
 #include <observable.hpp>
 #include <observer.hpp>
 
-namespace flowpp {
-
 using data_uptr = std::unique_ptr<data>;
 using fltr_uptr = std::unique_ptr<filter>;
 
@@ -21,8 +19,6 @@ public:
     return data(str); // data is template class but compiler is able to deduce its type */
   }
 };
-
-}
 
 void main() {
 
