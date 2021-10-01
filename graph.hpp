@@ -3,8 +3,6 @@
 
 #include <type_traits>
 
-namespace flowpp {
-
 class source;
 class target;
 class graph {
@@ -32,8 +30,6 @@ public:
 
 private:
   std::list<std::unique_ptr<observable>> _obsvl_list;
-};
-
 };
 
 #endif
