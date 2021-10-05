@@ -4,7 +4,6 @@
 #include <type_traits>
 
 class source;
-class target;
 class graph {
 public:
   explicit graph() { }
