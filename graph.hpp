@@ -3,7 +3,6 @@
 
 #include <type_traits>
 
-class source;
 class graph {
 public:
   explicit graph() { }
