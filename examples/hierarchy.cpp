@@ -1,4 +1,3 @@
-using namespace flowpp
 using content_type = flowpp::network::http::content_type;
 
 class http_flow_container : public emitter, public receiver {
