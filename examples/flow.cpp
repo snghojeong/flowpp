@@ -2,7 +2,7 @@
 using port = flowpp::network::port;
 using content_type = flowpp::network::http::content_type;
 
-int main()
+int main(int, char**)
 {
   auto src = tcp_graph.get<str_src>();
   auto tcp_rx = tcp_graph.get<tcp_receiver>();
