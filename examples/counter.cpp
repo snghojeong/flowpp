@@ -17,7 +17,7 @@ public:
     return _cnt;
   }
 
-private:
+protected:
   unsigned int _cnt;
 };
 
