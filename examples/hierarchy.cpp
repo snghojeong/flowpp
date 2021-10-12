@@ -3,7 +3,7 @@ using content_type = flowpp::network::http::content_type;
 class http_flow_container : public emitter, public receiver {
 public:
   explicit flow_container() {
-    json_encoder json_enc;
+    unique_ptr<json_encoder> json_enc = new json_enc();
     this >> json_enc >> http_builder[content_type("application/json")] >> this;
   }
 
