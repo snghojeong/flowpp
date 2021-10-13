@@ -15,6 +15,7 @@ class observable {
   using string = std::string;
   using data_uptr = std::unique_ptr<data>;
   using observer_uptr = std::unique_ptr<observer>;
+  using observer_table = std::map<string, observer_uptr>;
   friend class observer;
 
 public:
@@ -33,7 +34,7 @@ public:
   void add(observer_uptr obs, filter fltr = filter()) { _obs_map.insert( { fltr, obs } ); }
 
 private:
-  std::map<string, observer_uptr> _obs_map;
+  observer_table _obs_map;
   std::list<data_uptr> _dat_list;
 };
 
