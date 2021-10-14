@@ -1,8 +1,6 @@
 #ifndef _GRAPH_H_
 #define _GRAPH_H_
 
-#include <type_traits>
-
 class graph {
 public:
   explicit graph() { }
