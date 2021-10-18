@@ -3,7 +3,7 @@
 #include <observable.hpp>
 #include <graph.hpp>
 
-class counter : public flowpp::source {
+class counter : public source {
 public:
   explicit counter() { _cnt = 0; }
   virtual ~counter() {}
