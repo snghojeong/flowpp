@@ -3,6 +3,7 @@
 
 using data_uptr = std::unique_ptr<data>;
 using fltr_uptr = std::unique_ptr<filter>;
+using data_sptr = std::shared_ptr<data>;
 
 class printer : public observer {
 public:
