@@ -3,6 +3,8 @@
 #include <observable.hpp>
 #include <graph.hpp>
 
+using data_uptr = std::unique_ptr<flowpp::data>;
+
 class counter : public source {
 public:
   explicit counter() { _cnt = 0; }
