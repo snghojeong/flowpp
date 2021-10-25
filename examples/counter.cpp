@@ -10,7 +10,7 @@ public:
   explicit counter() { _cnt = 0; }
   virtual ~counter() {}
 
-  std::unique_ptr<flowpp::data> generate() {
+  data_uptr generate() {
     std::cout << "_cnt: " << _cnt << std::endl;
     return std::make_unique<flowpp::data_impl>(_cnt++);
   }
