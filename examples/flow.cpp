@@ -4,6 +4,7 @@ using content_type = flowpp::network::http::content_type;
 
 int main(int, char**)
 {
+  graph tcp_graph;
   auto src = tcp_graph.get<str_src>();
   auto tcp_rx = tcp_graph.get<tcp_receiver>();
   auto tcp_tx = tcp_graph.get<tcp_sender>();
