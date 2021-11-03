@@ -1,4 +1,5 @@
 using content_type = flowpp::network::http::content_type;
+using content_type_uptr = unique_ptr<flowpp::network::http::content_type>;
 using json_enc_uptr = unique_ptr<json_encoder>;
 
 class http_flow_container : public emitter, public receiver {
