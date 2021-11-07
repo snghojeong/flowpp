@@ -7,6 +7,7 @@ public:
   virtual ~data() { }
 
   virtual const format& format() const = 0;
+  virtual void set(data& dat) = 0;
 };
 
 #endif
