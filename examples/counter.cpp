@@ -4,6 +4,7 @@
 #include <graph.hpp>
 
 using data_uptr = std::unique_ptr<flowpp::data>;
+using data_sptr = std::shared_ptr<flowpp::data>;
 
 class counter : public source {
 public:
