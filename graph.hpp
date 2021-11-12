@@ -1,6 +1,8 @@
 #ifndef _GRAPH_H_
 #define _GRAPH_H_
 
+using obsvl_uptr = std::unique_ptr<observable>;
+
 class graph {
 public:
   explicit graph() { }
@@ -25,7 +27,7 @@ public:
   }
 
 private:
-  std::list<std::unique_ptr<observable>> _obsvl_list;
+  std::list<obsvl_uptr> _obsvl_list;
 };
 
 #endif
