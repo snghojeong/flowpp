@@ -1,5 +1,6 @@
 using content_type = flowpp::network::http::content_type;
 using content_type_uptr = unique_ptr<flowpp::network::http::content_type>;
+using content_type_sptr = shared_ptr<flowpp::network::http::content_type>;
 using json_enc_uptr = unique_ptr<json_encoder>;
 using json_enc_sptr = shared_ptr<json_encoder>;
 
