@@ -6,7 +6,7 @@ public:
   explicit data() { }
   virtual ~data() { }
 
-  virtual const format& format() const = 0;
+  virtual const unique_ptr<format> format() const = 0;
   virtual void set(data& dat) = 0;
 };
 
