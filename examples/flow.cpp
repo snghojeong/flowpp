@@ -1,7 +1,7 @@
 
 using port = flowpp::network::port;
 using content_type = flowpp::network::http::content_type;
-
+using port_uptr = std::unique_ptr<port>;
 int main(int, char**)
 {
   graph tcp_graph;
