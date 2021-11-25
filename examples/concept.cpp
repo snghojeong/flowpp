@@ -25,12 +25,13 @@ public:
 
 void main() {
 
-  auto scann = key_scanner();
-  auto print = txt_printer();
+  auto engine = flowpp_engine();
+  auto scann = engine.instantiate<key_scanner>();
+  auto print = engine.instantiate<txt_printer>();
 
   scann >> print;
 
-  scanner.run(INFINITE /* timeout */, INFINITE /* number of loop */);
+  engine.run(INFINITE /* timeout */, INFINITE /* number of loop */);
   
   return;
 }
