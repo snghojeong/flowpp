@@ -1,6 +1,8 @@
 #ifndef _DATA_H_
 #define _DATA_H_
 
+using data_uptr = std::unique_ptr<data>;
+
 class data {
 public:
   explicit data() { }
