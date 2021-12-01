@@ -5,6 +5,7 @@ class source : public observable {
   using data_uptr = std::unique_ptr<data>;
   using data_sptr = std::shared_ptr<data>;
   using format_uptr = std::unique_ptr<format>;
+  using format_sptr = std::shared_ptr<format>;
 
 public:
   explicit source() {}
