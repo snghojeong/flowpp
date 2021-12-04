@@ -26,7 +26,7 @@ public:
 
 void main() {
 
-  auto engine = flowpp_engine();
+  auto engine = make_unique<flowpp_engine>();
   auto scann = engine.instantiate<key_scanner>();
   auto print = engine.instantiate<txt_printer>();
 
