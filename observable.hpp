@@ -12,7 +12,6 @@
 #include <data.hpp>
 
 class observable {
-  using string = std::string;
   using data_uptr = std::unique_ptr<data>;
   using data_sptr = std::shared_ptr<data>;
   using observer_uptr = std::unique_ptr<observer>;
