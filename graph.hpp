@@ -28,7 +28,7 @@ public:
   }
 
 private:
-  std::list<obsvl_uptr> _obsvl_list;
+  std::list<obsvl_sptr> _obsvl_list;
 };
 
 #endif
