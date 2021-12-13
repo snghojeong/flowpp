@@ -1,6 +1,8 @@
 #ifndef _GRAPH_H_
 #define _GRAPH_H_
 
+class observable;
+
 using obsvl_uptr = std::unique_ptr<observable>;
 using obsvl_sptr = std::shared_ptr<observable>;
 
