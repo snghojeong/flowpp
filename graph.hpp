@@ -2,6 +2,7 @@
 #define _GRAPH_H_
 
 class observable;
+class observer;
 
 using obsvl_uptr = std::unique_ptr<observable>;
 using obsvl_sptr = std::shared_ptr<observable>;
