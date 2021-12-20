@@ -6,7 +6,7 @@ using json_enc_sptr = shared_ptr<json_encoder>;
 class http_flow_container : public emitter, public receiver {
 public:
   explicit flow_container() {
-    json_enc_uptr json_enc = make_unique<json_enc>();
+    json_enc_uptr json_enc = make_unique<json_encoder>();
     this >> json_enc >> http_builder[unique_ptr<content_type>("application/json")] >> this;
   }
 
