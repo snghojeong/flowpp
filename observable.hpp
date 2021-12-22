@@ -25,7 +25,7 @@ public:
 
   virtual void process() {
     std::for_each(_dat_list.begin(), _dat_list.end(), [this] (data_uptr dat) {
-      std::for_each(_obs_map.begin(), _obs_map.end(), [=] (std::pair<filter, observer_uptr> obs) { 
+      std::for_each(_obs_map.begin(), _obs_map.end(), [=] (std::pair<string, observer_uptr> obs) { 
         pair.second->notify(dat); 
       });
     });
