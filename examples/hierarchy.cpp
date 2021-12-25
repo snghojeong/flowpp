@@ -17,5 +17,5 @@ int main()
 {
   http_flow_container http_container;
 
-  src("file.json") >> http_container >> tcp_sender;
+  src >> http_container >> tcp_sender;
 }
