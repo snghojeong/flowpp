@@ -16,6 +16,6 @@ observable >> observable, observer | observer
 And we can use filter to get specific type of data from observable.
 
 observable[filter exp] | observer
-observable >> observer[filter exp]
+observable | observer[filter exp]
 
 observer will get data only filtered. If you indicate filter as "\*" observer will get all data emited by observable.
