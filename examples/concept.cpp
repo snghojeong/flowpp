@@ -10,7 +10,7 @@ using scanner_sptr = std::shared_ptr<scanner>;
 
 class printer : public observer {
 public:
-  virtual void notify(data& d) {
+  virtual void notify(data_uptr d) {
     std::cout << d.val() << std::endl;
   }
 };
