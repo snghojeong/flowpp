@@ -30,7 +30,7 @@ void main() {
   auto scann = engine.instantiate<key_scanner>();
   auto print = engine.instantiate<txt_printer>();
 
-  scann >> print;
+  scann | print;
 
   engine.run(INFINITE /* timeout */, INFINITE /* number of loop */);
   
