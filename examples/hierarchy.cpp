@@ -7,7 +7,7 @@ class http_flow_container : public emitter, public receiver {
 public:
   explicit flow_container() {
     json_enc_uptr json_enc = make_unique<json_encoder>();
-    this >> json_enc >> http_builder[unique_ptr<content_type>("application/json")] >> this;
+    this | json_enc | http_builder[unique_ptr<content_type>("application/json")] | this;
   }
 
   virtual ~flow_container() { }
@@ -17,5 +17,5 @@ int main()
 {
   http_flow_container http_container;
 
-  src >> http_container >> tcp_sender;
+  src | http_container | tcp_sender;
 }
