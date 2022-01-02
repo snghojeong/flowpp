@@ -26,11 +26,11 @@ protected:
 
 int main()
 {
-  flowpp::graph cnt_graph;
+  flowpp::graph cnter_graph;
 
-  auto cnter = cnt_graph.get<counter>();
+  auto cnter = cnter_graph.get<counter>();
 
-  cnt_graph.run(INFINITE/* timeout */, 10 /* numnber of loop */);
+  cnter_graph.run(INFINITE/* timeout */, 10 /* numnber of loop */);
 
   std::cout << cnter.get() << std::endl; // print 10
 
