@@ -13,7 +13,6 @@ public:
 
   virtual void emit() {
     this->generate();
-    this->emit();
   }
 
   virtual data_sptr generate() = 0; 
