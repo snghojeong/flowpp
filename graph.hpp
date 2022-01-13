@@ -13,9 +13,9 @@ public:
   virtual ~graph() { }
   
   template <typename T>
-  std::unique_ptr<T> get() {
+  std::shared_ptr<T> get() {
     static_assert(std::is_base_of<observable, T>::value, "T must inherit observable");
-    auto inst = make_unique<T>();
+    auto inst = make_shared<T>();
     _obsvl_list.push_back(inst);
     return inst;
   }
