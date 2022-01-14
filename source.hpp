@@ -4,9 +4,7 @@
 class source : public observable {
   using data_uptr = std::unique_ptr<data>;
   using data_sptr = std::shared_ptr<data>;
-  using format_uptr = std::unique_ptr<format>;
-  using format_sptr = std::shared_ptr<format>;
-
+  
 public:
   explicit source() {}
   virtual ~source() {}
@@ -15,7 +13,7 @@ public:
     this->generate();
   }
 
-  virtual data_sptr generate() = 0; 
+  virtual data_uptr generate() = 0; 
 };
 
 #endif
