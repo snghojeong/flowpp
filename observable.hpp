@@ -31,7 +31,7 @@ public:
   }
 
   void add(data_uptr dat) { _dat_list.push_back(dat); }
-  void add(observer_uptr obs, filter fltr = filter()) { _obs_map.insert( { fltr, obs } ); }
+  void add(observer_uptr obs) { _obs_map.insert( { obs } ); }
 
 private:
   observer_table _obs_map;
