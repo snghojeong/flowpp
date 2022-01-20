@@ -17,10 +17,10 @@ public:
 
 class key_scanner : public observable {
 public:
-  data poll() {
+  data_uptr poll() {
     std::string str;
     std::cin >> str;
-    return data(str); // data is template class but compiler is able to deduce its type */
+    return make_unique<data>(str); // data is template class but compiler is able to deduce its type */
   }
 };
 
