@@ -5,10 +5,7 @@
 #include <observer.hpp>
 #endif
 
-#include <memory>
 #include <map>
-#include <string>
-#include <data.hpp>
 
 class observable {
   using data_uptr = std::unique_ptr<data>;
