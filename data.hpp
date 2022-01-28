@@ -12,7 +12,7 @@ public:
   virtual ~data() { }
 
   virtual const format format() const = 0;
-  virtual void set(data& dat) = 0;
+  virtual void set(const data_uptr dat) = 0;
   virtual data_uptr get() const = 0;
 };
 
