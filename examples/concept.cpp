@@ -31,6 +31,7 @@ void main() {
   auto print = engine.instantiate<txt_printer>();
 
   scann | print;
+  scann | counter;
 
   engine.run(INFINITE /* timeout */, INFINITE /* number of loop */);
   
