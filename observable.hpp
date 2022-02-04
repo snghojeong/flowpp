@@ -9,9 +9,7 @@
 
 class observable {
   using data_uptr = std::unique_ptr<data>;
-  using data_sptr = std::shared_ptr<data>;
   using observer_uptr = std::unique_ptr<observer>;
-  using observer_sptr = std::shared_ptr<observer>;
   using observer_table = std::map<string, observer_uptr>;
   friend class observer;
 
