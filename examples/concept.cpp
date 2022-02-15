@@ -33,7 +33,7 @@ void main() {
   scann | print;
   scann | counter;
 
-  engine.run(INFINITE /* timeout */, INFINITE /* number of loop */);
+  engine->run(INFINITE /* timeout */, INFINITE /* number of loop */);
   
   return;
 }
