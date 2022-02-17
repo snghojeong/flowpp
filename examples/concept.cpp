@@ -23,14 +23,14 @@ public:
 
 void main() {
 
-  auto engine = make_unique<flowpp_engine>();
-  auto scann = engine->instantiate<key_scanner>();
-  auto print = engine->instantiate<txt_printer>();
+  auto engine_uptr = make_unique<flowpp_engine>();
+  auto scann = engine_uptr->instantiate<key_scanner>();
+  auto print = engine_uptr->instantiate<txt_printer>();
 
   scann | print;
   scann | counter;
 
-  engine->run(INFINITE /* timeout */, INFINITE /* number of loop */);
+  engine_uptr->run(INFINITE /* timeout */, INFINITE /* number of loop */);
   
   return;
 }
