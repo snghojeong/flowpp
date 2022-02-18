@@ -24,11 +24,11 @@ public:
 void main() {
 
   auto engine_uptr = make_unique<flowpp_engine>();
-  auto scann = engine_uptr->instantiate<key_scanner>();
+  auto scann_uptr = engine_uptr->instantiate<key_scanner>();
   auto print = engine_uptr->instantiate<txt_printer>();
 
-  scann | print;
-  scann | counter;
+  scann_uptr | print;
+  scann_uptr | counter;
 
   engine_uptr->run(INFINITE /* timeout */, INFINITE /* number of loop */);
   
