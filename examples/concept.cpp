@@ -26,11 +26,14 @@ void main() {
   auto engine_uptr = make_unique<flowpp_engine>();
   auto scann_uptr = engine_uptr->instantiate<key_scanner>();
   auto print_uptr = engine_uptr->instantiate<txt_printer>();
+  auto counter_uptr = engine_uptr->instantiate<counter>();
 
   scann_uptr | print_uptr;
-  scann_uptr | counter;
+  scann_uptr | counter_uptr;
 
   engine_uptr->run(INFINITE /* timeout */, INFINITE /* number of loop */);
+  
+  printf("KEY counding: %d", counter_uptr->get());
   
   return;
 }
