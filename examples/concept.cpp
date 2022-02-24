@@ -4,6 +4,7 @@
 using data_uptr = std::unique_ptr<data>;
 using fltr_uptr = std::unique_ptr<filter>;
 using scanner_uptr = std::unique_ptr<scanner>;
+using counter_uptr = std::unique_ptr<counter_uptr>;
 
 class printer : public observer {
 public:
