@@ -4,6 +4,7 @@
 using data_uptr = std::unique_ptr<data>;
 using scanner_uptr = std::unique_ptr<scanner>;
 using counter_uptr = std::unique_ptr<counter_uptr>;
+using engine_uptr = std::unique_ptr<flowpp_engine>;
 
 class printer : public observer {
 public:
