@@ -2,6 +2,7 @@ using content_type_uptr = unique_ptr<flowpp::network::http::content_type>;
 using content_type_sptr = shared_ptr<flowpp::network::http::content_type>;
 using json_enc_uptr = unique_ptr<json_encoder>;
 using json_enc_sptr = shared_ptr<json_encoder>;
+using http_container_uptr = unique_ptr<http_container>;
 
 class http_flow_container : public emitter, public receiver {
 public:
@@ -15,7 +16,7 @@ public:
 
 int main()
 {
-  http_flow_container http_container;
+  http_flow_container_uptr http_container;
 
   src | http_container | tcp_sender;
 }
