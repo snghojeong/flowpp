@@ -16,7 +16,8 @@ public:
 
 int main()
 {
+  file_src_uptr file_src;
   http_flow_container_uptr http_container;
 
-  src | http_container | tcp_sender;
+  file_src | http_container | tcp_sender;
 }
