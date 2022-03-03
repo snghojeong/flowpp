@@ -2,9 +2,10 @@
 using port = flowpp::network::port;
 using content_type = flowpp::network::http::content_type;
 using port_uptr = std::unique_ptr<port>;
+using graph_uptr = std::unique_ptr<graph>;
 int main(int, char**)
 {
-  graph tcp_graph;
+  graph_uptr tcp_graph;
   auto src = tcp_graph.get<str_src>();
   auto tcp_rx = tcp_graph.get<tcp_receiver>();
   auto tcp_tx = tcp_graph.get<tcp_sender>();
