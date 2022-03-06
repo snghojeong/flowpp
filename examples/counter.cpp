@@ -30,11 +30,11 @@ protected:
 
 int main()
 {
-  flowpp::graph cnter_graph;
+  graph_uptr cnter_graph;
 
   auto cnter_uptr = cnter_graph.get<counter>();
 
-  cnter_graph.run(INFINITE/* timeout */, 10 /* numnber of loop */);
+  cnter_graph->run(INFINITE/* timeout */, 10 /* numnber of loop */);
 
   std::cout << cnter_uptr->get() << std::endl; // print 10
 
