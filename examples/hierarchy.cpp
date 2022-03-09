@@ -21,4 +21,6 @@ int main()
   http_flow_container_uptr http_container;
 
   file_src | http_container | tcp_sender;
+  
+  file_src->generate();
 }
