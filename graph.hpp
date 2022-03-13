@@ -5,6 +5,7 @@ class observable;
 class observer;
 
 using obsvl_uptr = std::unique_ptr<observable>;
+using obsvl_sptr = std::shared_ptr<observable>;
 
 class graph {
 public:
