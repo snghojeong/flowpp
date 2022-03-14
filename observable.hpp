@@ -26,6 +26,7 @@ public:
   }
 
   void add(data_uptr dat) { _dat_list.push_back(dat); }
+  void add(data_sptr dat) { _dat_list.push_back(dat); }
   void add(observer_uptr obs) { _obs_map.insert( { obs } ); }
 
 private:
