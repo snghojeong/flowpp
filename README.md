@@ -11,7 +11,8 @@ observable | observer
 The observer receive data from the observable and this flow is executed aynchronously.  
 The class could be ether "observable" and "observer" then you can express it like below:  
 
-observable | observable, observer | observer
+observable | observable
+observer | observer
 
 And we can use filter to get specific type of data from observable.
 
