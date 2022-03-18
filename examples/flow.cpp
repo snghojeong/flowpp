@@ -18,7 +18,7 @@ int main(int, char**)
   // FTP
   tcp_rx[port(22)] | ftp_parser | file_writer("filename");
 
-  tcp_graph.wait(INFINITE /* timeout */, INFINITE /* number of loop */);
+  tcp_graph.wait(10000 /* timeout */, INFINITE /* number of loop */);
 
   return 0;
 }
