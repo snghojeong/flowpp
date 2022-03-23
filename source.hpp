@@ -15,7 +15,7 @@ public:
   }
 
   virtual data_uptr generate() = 0; 
-  virtual data_sptr generate() = 0; 
+  virtual data_sptr generate_shared() = 0; 
 };
 
 #endif
