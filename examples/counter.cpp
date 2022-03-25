@@ -17,7 +17,7 @@ public:
 
   data_uptr generate() {
     std::cout << "_cnt: " << _cnt << std::endl;
-    return std::make_unique<flowpp::data_impl>(_cnt++);
+    return std::make_unique<data>(_cnt++);
   }
 
   unsigned int get() {
