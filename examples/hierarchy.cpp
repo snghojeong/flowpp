@@ -13,6 +13,8 @@ public:
   }
 
   virtual ~flow_container() { }
+
+  data_uptr get () { return NULL }
 };
 
 int main()
