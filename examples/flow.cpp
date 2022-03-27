@@ -2,7 +2,7 @@ using content_type = flowpp::network::http::content_type;
 using port_uptr = std::unique_ptr<flowpp::network::port>;
 using graph_uptr = std::unique_ptr<graph>;
 
-int main(int, char**)
+void main()
 {
   graph_uptr tcp_graph;
   auto src = tcp_graph.get<str_src>();
@@ -19,6 +19,4 @@ int main(int, char**)
   tcp_rx[port(22)] | ftp_parser | file_writer("filename");
 
   tcp_graph.wait(10000 /* timeout */, INFINITE /* number of loop */);
-
-  return 0;
 }
