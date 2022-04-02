@@ -28,6 +28,10 @@ public:
     }
   }
 
+  void wait(unsigned long timeout) {
+    wait(timeout, -1);
+  }
+
 private:
   std::list<obsvl_uptr> _obsvl_list;
 };
