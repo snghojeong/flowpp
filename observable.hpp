@@ -1,11 +1,8 @@
+#include <map>
+#include <observer.hpp>
+
 #ifndef _OBSERVERABLE_HPP_
 #define _OBSERVERABLE_HPP_
-
-#ifndef _OBSERVER_HPP_
-#include <observer.hpp>
-#endif
-
-#include <map>
 
 class observable {
   using data_uptr = std::unique_ptr<data>;
