@@ -30,7 +30,7 @@ protected:
 
 int main()
 {
-  graph_uptr cnter_graph;
+  graph_uptr cnter_graph = make_unique<graph>();;
 
   auto cnter = cnter_graph.get<counter>();
 
