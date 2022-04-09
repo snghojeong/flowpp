@@ -15,7 +15,7 @@ public:
     return _obsvl_list.push_back(inst);
   }
 
-  void wait(unsigned long timeout, unsigned long loop) {
+  void wait(time_t timeout, unsigned long loop) {
     auto start_time = curr_time = 0;
     auto cnt = 0;
     while ((loop == 0) || ((cnt++ < loop) && (start_time + timeout > curr_time))) {
@@ -25,8 +25,12 @@ public:
     }
   }
 
-  void wait(unsigned long timeout) {
+  void wait(time_t timeout) {
     wait(timeout, -1);
+  }
+  
+  void wait(unsigned long loop) {
+    wait(-1, loop);
   }
 
 private:
