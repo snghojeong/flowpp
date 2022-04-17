@@ -2,7 +2,6 @@
 #define _SOURCE_HPP_
 
 using data_uptr = std::unique_ptr<data>;
-using data_sptr = std::shared_ptr<data>;
 
 class source : public observable {
 
@@ -14,8 +13,7 @@ public:
     return this->generate();
   }
 
-  virtual data_uptr generate() = 0; 
-  virtual data_sptr generate_shared() = 0; 
+  virtual data_uptr generate() = 0;
 };
 
 #endif
