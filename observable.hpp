@@ -11,7 +11,7 @@ class observable {
   friend class observer;
 
 public:
-  explicit observable() {}
+  explicit observable() { _obs_map = make_unique<>(std::map<string, observer_uptr>) }
   virtual ~observable() {}
 
   virtual void process() {
