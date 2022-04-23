@@ -11,7 +11,8 @@ public:
   template <typename T>
   std::unique_ptr<T> get() {
     auto inst = make_unique<T>();
-    return _obsvl_list.push_back(inst);
+    _obsvl_list.push_back(inst);
+    return inst;
   }
 
   void wait(time_t timeout, unsigned long loop) {
