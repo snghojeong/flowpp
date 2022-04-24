@@ -9,10 +9,6 @@ public:
   explicit source() {}
   virtual ~source() {}
 
-  virtual data_uptr emit() {
-    return this->generate();
-  }
-
   virtual data_uptr generate() = 0;
 };
 
