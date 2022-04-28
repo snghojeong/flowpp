@@ -1,8 +1,5 @@
 #include <iostream>
 
-#include <observable.hpp>
-#include <graph.hpp>
-
 using data_uptr = std::unique_ptr<flowpp::data>;
 using data_sptr = std::shared_ptr<flowpp::data>;
 using fltr_uptr = std::unique_ptr<filter>;
