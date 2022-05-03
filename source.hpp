@@ -10,6 +10,7 @@ public:
   virtual ~source() {}
 
   virtual data_uptr generate() = 0;
+  virtual void set_callback() = 0;
 };
 
 #endif
