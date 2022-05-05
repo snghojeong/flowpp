@@ -8,8 +8,8 @@ using engine_uptr = std::unique_ptr<flowpp_engine>;
 
 class printer : public observer {
 public:
-  virtual void notify(data_uptr d) {
-    std::cout << d->val() << std::endl;
+  virtual void notify(data_uptr dat) {
+    std::cout << dat->val() << std::endl;
   }
 };
 
