@@ -1,5 +1,5 @@
-#ifndef _DATA_H_
-#define _DATA_H_
+#ifndef _DATA_HPP_
+#define _DATA_HPP_
 
 using data_uptr = std::unique_ptr<data>;
 using format_uptr = std::unique_ptr<format>;
