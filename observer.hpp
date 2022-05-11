@@ -7,7 +7,8 @@ class observer {
   using data_uptr = std::unique_ptr<data>;
 
 public:
-  virtual void notify(const data_uptr& data_ptr) = 0;
+  virtual void notify(const data_uptr data_ptr) = 0;
+  virtual data_uptr get() = 0;
 };
 
 #endif
