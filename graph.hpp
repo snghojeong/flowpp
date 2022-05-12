@@ -7,13 +7,6 @@ class graph {
 public:
   explicit graph() { }
   virtual ~graph() { }
-  
-  template <typename T>
-  std::unique_ptr<T> get() {
-    auto inst = make_unique<T>();
-    _obsvl_list.push_back(inst);
-    return inst;
-  }
 
   void wait(time_t timeout, unsigned long loop) {
     auto start_time = curr_time = 0;
