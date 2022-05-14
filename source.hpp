@@ -11,6 +11,7 @@ public:
 
   virtual data_uptr generate() = 0;
   virtual void set_callback() = 0;
+  virtual void set_data(data_uptr data) = 0;
 };
 
 #endif
