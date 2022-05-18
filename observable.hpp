@@ -1,6 +1,3 @@
-#include <map>
-#include <observer.hpp>
-
 #ifndef _OBSERVERABLE_HPP_
 #define _OBSERVERABLE_HPP_
 
