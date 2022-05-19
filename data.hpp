@@ -8,7 +8,6 @@ class data {
 public:
   virtual const format_uptr format() const = 0;
   virtual void set(const data_uptr dat) = 0;
-  virtual void set(const data_sptr dat) = 0;
   virtual data_uptr get() const = 0;
 };
 
