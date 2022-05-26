@@ -32,7 +32,7 @@ void main() {
   scanner_uptr | print_uptr;
   scanner_uptr | counter_uptr;
 
-  engine_uptr->run(10000 /* timeout */, INFINITE /* number of loop */);
+  engine_uptr->run(10000 /* timeout */, -1 /* number of loop */);
   
   printf("KEY counding: %d", counter_uptr->get());
   
