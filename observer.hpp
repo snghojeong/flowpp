@@ -8,8 +8,6 @@ class observer {
 
 public:
   virtual void notify(const data_uptr data_ptr) = 0;
-  virtual data_uptr get() = 0;
-  virtual auto type() = 0;
 };
 
 #endif
