@@ -26,6 +26,8 @@ public:
     wait(-1, loop);
   }
 
+  void run() = 0;
+
 private:
   std::list<obsvl_uptr> _obsvl_list;
 };
