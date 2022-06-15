@@ -5,7 +5,6 @@ class observable {
   using data_uptr = std::unique_ptr<data>;
   using observer_uptr = std::unique_ptr<observer>;
   using observer_tbl_uptr = std::unique_ptr<std::map<string, observer_uptr>>;
-  friend class observer;
 
 public:
   explicit observable() { _obs_map = make_unique<>(std::map<string, observer_uptr>) }
