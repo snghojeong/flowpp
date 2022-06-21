@@ -2,6 +2,7 @@ using content_type = flowpp::network::http::content_type;
 using port_uptr = std::unique_ptr<flowpp::network::port>;
 using graph_uptr = std::unique_ptr<graph>;
 using tcp_receiver = flowpp::network::tcp_receiver;
+using tcp_recv_uptr = std::unique_ptr<tcp_receiver>;
 
 void main()
 {
