@@ -1,11 +1,8 @@
 #include <iostream>
 
 using data_uptr = std::unique_ptr<flowpp::data>;
-using data_sptr = std::shared_ptr<flowpp::data>;
 using fltr_uptr = std::unique_ptr<filter>;
-using fltr_sptr = std::shared_ptr<filter>;
 using scanner_uptr = std::unique_ptr<scanner>;
-using scanner_sptr = std::shared_ptr<scanner>;
 
 class counter : public source {
 public:
