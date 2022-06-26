@@ -8,7 +8,6 @@ public:
   virtual ~source() {}
 
   virtual data_uptr generate() = 0;
-  virtual void set(std::function func) = 0;
   virtual void set(data_uptr data) = 0;
 };
 
