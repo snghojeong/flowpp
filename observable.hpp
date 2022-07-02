@@ -18,12 +18,12 @@ public:
     });
   }
 
-  void add(data_uptr dat) { _dat_list.push_back(dat); }
+  void add(data_uptr dat) { _data_list.push_back(dat); }
   void add(observer_uptr obs) { _obs_map.insert( { obs } ); }
 
 private:
   observer_table_uptr _obs_map;
-  std::list<data_uptr> _dat_list;
+  std::list<data_uptr> _data_list;
 };
 
 #endif
