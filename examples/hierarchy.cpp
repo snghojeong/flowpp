@@ -23,4 +23,6 @@ int main()
   file_src | http_container | tcp_sender;
   
   file_src->generate();
+
+  graph->run();
 }
