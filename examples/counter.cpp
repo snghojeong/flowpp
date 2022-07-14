@@ -2,7 +2,6 @@
 
 using data_uptr = std::unique_ptr<flowpp::data>;
 using fltr_uptr = std::unique_ptr<filter>;
-using scanner_uptr = std::unique_ptr<scanner>;
 
 class counter : public source {
 public:
