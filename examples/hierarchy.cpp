@@ -1,9 +1,7 @@
 using content_type_uptr = unique_ptr<flowpp::network::http::content_type>;
 using json_enc_uptr = unique_ptr<json_encoder>;
-using json_enc_sptr = shared_ptr<json_encoder>;
 using http_container_uptr = unique_ptr<http_container>;
 using file_src_uptr = unique_ptr<file_src>;
-using file_src_sptr = shared_ptr<file_src>;
 
 class http_flow_container : public emitter, public receiver {
 public:
