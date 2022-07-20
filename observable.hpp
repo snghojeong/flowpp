@@ -7,7 +7,7 @@ class observable {
   using observer_tbl_uptr = std::unique_ptr<std::map<string, observer_uptr>>;
 
 public:
-  explicit observable() { _obs_map = make_unique<>(std::map<string, observer_uptr>) }
+  explicit observable() { _obs_map = make_unique<std::map<string, observer_uptr>>() }
   virtual ~observable() {}
 
   virtual void process() {
