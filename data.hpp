@@ -11,6 +11,7 @@ public:
   virtual const format_uptr format() const = 0;
   virtual void set(data_uptr dat) = 0;
   virtual const data_uptr get() const = 0;
+  virtual std::string name() const = 0;
 };
 
 #endif
