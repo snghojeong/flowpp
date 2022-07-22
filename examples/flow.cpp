@@ -13,8 +13,7 @@ void main()
 
   // HTTP
   src["JSON"] | json_builder | http_builder | tcp_tx; 
-  tcp_rx[port(80)] |    http_parser;
-                        http_parser[content_type("application/json")] | file_writer("recv.json");
+  tcp_rx[port(80)] |    http_parser[content_type("application/json")] | file_writer("recv.json");
                         http_parser[content_type("plain/text")] | [] (const std::string& txt) { cout << txt; };
 
   // FTP
