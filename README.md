@@ -1,9 +1,9 @@
 Introduction
 ------------
 
-dataflow is a library which enable you to implement software by Dataflow programming.  
+Dataflow is a library which enable you to implement software by Dataflow programming.  
 Dataflow programming is not a easy programming paradigm but basically focus on "data flow" of a software.  
-The initial concept of dataflow is that programmer can use two abstract class "observer" and "observable".  
+The initial concept of Dataflow is that programmer can use two abstract class "observer" and "observable".  
 And these two classes are the basic component of data flow.  
 
 observable | observer  
