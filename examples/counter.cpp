@@ -29,7 +29,7 @@ int main()
 
   cnter_graph->run(INFINITE/* timeout */, 10 /* numnber of loop */);
 
-  std::cout << cnter->get_cnt() << std::endl; // print 10
+  std::cout << cnter->get_cnt(); // print 10
 
   return 0;
 }
