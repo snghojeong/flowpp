@@ -19,11 +19,11 @@ public:
   }
 
   void wait(time_t timeout) {
-    wait(timeout, -1);
+    wait(timeout, INFINITE);
   }
   
   void wait(unsigned long loop) {
-    wait(-1, loop);
+    wait(INFINITE, loop);
   }
 
 private:
