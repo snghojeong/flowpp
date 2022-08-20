@@ -9,7 +9,6 @@ public:
   virtual ~counter() {}
 
   data_uptr generate() {
-    std::cout << "_cnt: " << _cnt << std::endl;
     return std::make_unique<data>(_cnt++);
   }
 
