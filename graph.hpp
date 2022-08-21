@@ -28,7 +28,6 @@ public:
 
 private:
   std::list<obsvl_uptr> _obsvl_list;
-  std::list<data_uptr> _data_list;
 };
 
 #endif
