@@ -28,6 +28,7 @@ void main() {
 
   scanner_uptr | print_uptr;
   scanner_uptr | counter_uptr;
+  counter_uptr | print_uptr;
 
   engine_uptr->run(INFINITE /* timeout */, INFINITE /* number of loop */);
   
