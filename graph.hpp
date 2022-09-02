@@ -1,6 +1,7 @@
 #ifndef _GRAPH_H_
 #define _GRAPH_H_
 
+class observable;
 using obsvl_uptr = std::unique_ptr<observable>;
 
 class graph {
