@@ -24,7 +24,7 @@ public:
 
 private:
   observer_table_uptr _obs_map;
-  data_list _data_list;
+  data_list_uptr _data_list;
 };
 
 #endif
