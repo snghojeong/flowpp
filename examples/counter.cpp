@@ -9,7 +9,7 @@ public:
   virtual ~counter() {}
 
   data_uptr generate() {
-    return std::make_unique<data>(_cnt++);
+    return std::make_unique<flowpp::data>(_cnt++);
   }
 
   unsigned int get_cnt() {
