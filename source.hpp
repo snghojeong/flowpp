@@ -2,6 +2,7 @@
 #define _SOURCE_HPP_
 
 using data_uptr = std::unique_ptr<data>;
+using fmt_uptr = std::unique_ptr<format>;
 
 class source : public observable {
 
