@@ -15,7 +15,7 @@ public:
 
 int main()
 {
-  file_src_uptr file_src;
+  auto file_src = graph->get<file_src_uptr>();
   http_flow_container_uptr http_container;
 
   file_src | http_container | tcp_sender;
