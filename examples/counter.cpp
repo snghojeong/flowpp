@@ -1,5 +1,7 @@
 #include <iostream>
 
+using namespace flowpp;
+
 using data_uptr = std::unique_ptr<flowpp::data>;
 using fltr_uptr = std::unique_ptr<filter>;
 
