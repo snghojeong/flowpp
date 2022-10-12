@@ -2,7 +2,6 @@
 #define _DATA_HPP_
 
 class data;
-class format;
 
 using data_uptr = std::unique_ptr<data>;
 using fmt_uptr = std::unique_ptr<format>;
