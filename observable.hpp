@@ -20,7 +20,7 @@ public:
   }
 
   void add(data_uptr dat) { _data_list.push_back(dat); }
-  void add(std::string key, observer_uptr obs) { _obs_map.insert( { obs } ); }
+  void lookup(std::string key, observer_uptr obs) { _obs_map.insert( { obs } ); }
 
 private:
   observer_table_uptr _obs_map;
