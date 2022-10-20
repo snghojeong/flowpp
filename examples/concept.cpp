@@ -12,7 +12,7 @@ public:
 
 class key_scanner : public observable {
 public:
-  data_uptr poll() {
+  data_uptr generate() {
     std::string str;
     std::cin >> str;
     return make_unique<data<std::string>>(str); // data is template class but compiler is able to deduce its type */
