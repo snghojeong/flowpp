@@ -7,7 +7,7 @@ using tcp_recv_uptr = std::unique_ptr<flowpp::network::tcp_receiver>;
 void main()
 {
   graph_uptr tcp_graph;
-  auto src = tcp_graph.get<str_src>();
+  auto src = tcp_graph.get<json_src>();
   auto tcp_rx = tcp_graph.get<tcp_receiver>();
   auto tcp_tx = tcp_graph.get<tcp_sender>();
 
