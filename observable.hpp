@@ -23,7 +23,7 @@ public:
   void lookup(std::string key, observer_uptr obs) { _obs_map.insert( { obs } ); }
 
 private:
-  observer_table_uptr _obs_map;
+  observer_tbl_uptr _obs_map;
   data_list_uptr _data_list;
 };
 
