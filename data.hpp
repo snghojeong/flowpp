@@ -4,11 +4,10 @@
 class data;
 
 using data_uptr = std::unique_ptr<data>;
-using fmt_uptr = std::unique_ptr<format>;
 
 class data {
 public:
-  virtual const fmt_uptr format() const = 0;
+  virtual const format *format() const = 0;
   virtual void set(data_uptr dat) = 0;
   virtual std::string name() const = 0;
   virtual data_uptr clone() const = 0;
