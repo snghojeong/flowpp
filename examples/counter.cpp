@@ -13,13 +13,6 @@ public:
   data_uptr generate() {
     return std::make_unique<flowpp::data>(_cnt++);
   }
-
-  unsigned int get_cnt() {
-    return _cnt;
-  }
-
-protected:
-  unsigned int _cnt;
 };
 
 int main()
