@@ -5,8 +5,7 @@ using file_src_uptr = unique_ptr<file_src>;
 class http_flow_container : public emitter, public receiver {
 public:
   explicit flow_container() {
-    json_enc_uptr json_enc = make_unique<json_encoder>();
-    this | json_enc | http_builder[make_unique<content_type_uptr>("application/json")] | this;
+    this | http_builder[make_unique<content_type_uptr>("application/json")] | this;
   }
 
   virtual ~flow_container() { }
@@ -15,9 +14,10 @@ public:
 int main()
 {
   auto file_src = graph->get<file_src_uptr>();
+  auto json_enc = graph->get<json_enc_uptr>();
   http_flow_container_uptr http_container;
 
-  file_src | http_container | tcp_sender;
+  file_src | json_enc | http_container | tcp_sender;
 
   graph->run();
 }
