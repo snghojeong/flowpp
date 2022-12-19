@@ -15,7 +15,7 @@ public:
   data_uptr generate() {
     std::string str;
     std::cin >> str;
-    return make_unique<data<std::string>>(str); // data is template class but compiler is able to deduce its type */
+    return make_unique<data<std::string>>(str); /* data is template class but compiler is able to deduce its type */
   }
 };
 
