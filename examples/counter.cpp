@@ -1,11 +1,9 @@
 #include <iostream>
 
-using namespace flowpp;
-
 using data_uptr = std::unique_ptr<flowpp::data>;
-using fltr_uptr = std::unique_ptr<filter>;
+using fltr_uptr = std::unique_ptr<flowpp::filter>;
 
-class counter : public source {
+class counter : public flowpp::source {
 public:
   explicit counter() { _cnt = 0; }
   virtual ~counter() {}
@@ -17,7 +15,7 @@ public:
 
 int main()
 {
-  graph_uptr cnter_graph_uptr = make_unique<graph>();;
+  graph_uptr cnter_graph_uptr = make_unique<graph>();
 
   auto cnter = cnter_graph_uptr.get<counter>();
 
