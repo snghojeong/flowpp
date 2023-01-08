@@ -32,6 +32,7 @@ public:
 
 private:
   std::list<obsvl_uptr> _obsvl_list;
+  std::list<thread> _thread_list;
 };
 
 #endif
