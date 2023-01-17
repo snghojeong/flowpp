@@ -7,7 +7,7 @@ class observer {
   
 public:
   virtual void notify(const data_uptr d) = 0;
-  virtual void set(const data_uptr d) = 0;
+  virtual void set(const format_uptr d) = 0;
   virtual void subscribe(observer *obs) = 0;
 };
 
