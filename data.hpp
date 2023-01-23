@@ -10,9 +10,7 @@ public:
   virtual const format *format() const = 0;
   virtual void set(data_uptr dat) = 0;
   virtual T get() const = 0;
-  virtual std::string name() const = 0;
-  virtual data_uptr clone() const = 0;
-  virtual data_uptr move() const = 0;
+  virtual std::string str() const = 0;
 };
 
 #endif
