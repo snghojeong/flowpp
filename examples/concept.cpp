@@ -29,9 +29,9 @@ void main() {
   scanner_uptr | print_uptr;
   scanner_uptr | counter_uptr;
 
-  engine_uptr->run(INFINITE /* timeout */, 10 /* number of loop */);
+  engine_uptr->run(INFINITE /* timeout */, 100 /* number of loop */);
   
-  printf("KEY counding: %d", counter_uptr->get()); /* print 10 */
+  printf("KEY counding: %d", counter_uptr->get()); /* print 100 */
   
   return;
 }
