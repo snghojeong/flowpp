@@ -10,7 +10,6 @@ public:
   virtual ~source() {}
 
   virtual data_uptr generate() = 0;
-  virtual format_uptr format() = 0;
-
+}
 #endif
 
