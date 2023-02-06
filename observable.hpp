@@ -21,9 +21,6 @@ public:
 
   void add(data_uptr dat) { _data_list.push_back(dat); }
   void lookup(std::string key, observer_uptr obs) { _obs_map.insert( { obs } ); }
-  observer_uptr front() { return _obs_map.front(); }
-  observer_uptr tail() { return _obs_map.tail(); }
-  observer_uptr pop() { return _obs_map.pop() }
 
 private:
   observer_tbl_uptr _obs_map;
