@@ -8,7 +8,7 @@ public:
   explicit graph() { }
   virtual ~graph() { }
 
-  void wait(time_t timeout, unsigned long loop) {
+  void run(time_t timeout, unsigned long loop) {
     auto start_time = 0;
     auto curr_time = 0;
     auto cnt = 0;
@@ -19,12 +19,12 @@ public:
     }
   }
 
-  void wait(time_t timeout) {
-    wait(timeout, INFINITE);
+  void run(time_t timeout) {
+    run(timeout, INFINITE);
   }
   
-  void wait(unsigned long loop) {
-    wait(INFINITE, loop);
+  void run(unsigned long loop) {
+    run(INFINITE, loop);
   }
   
   std::unique_ptr<T> get() = 0;
