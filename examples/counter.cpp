@@ -16,7 +16,6 @@ public:
 class counter2 : public flowpp::source {
 public:
   explicit counter2() { _cnt = 0; }
-  virtual ~counter2() {}
 
   data_uptr generate() {
     _cnt += 2;
