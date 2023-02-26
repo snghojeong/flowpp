@@ -14,7 +14,7 @@ public:
     auto cnt = 0;
     while ((loop == 0) || ((cnt++ < loop) && (start_time > curr_time))) {
       std::for_each(_obsvl_list.begin(), _obsvl_list.end(), 
-          [] (observable* obsbl) { obsbl->emit(); });
+          [] (obsvl_uptr obsbl) { obsbl->emit(); });
       curr_time = millis();
     }
   }
