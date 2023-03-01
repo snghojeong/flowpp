@@ -5,7 +5,7 @@ using file_src_uptr = unique_ptr<file_src>;
 class http_flow_container : public emitter, public receiver {
 public:
   explicit flow_container() {
-    this->generate() | http_builder[make_unique<content_type_uptr>("application/json")] | this;
+    http_builder[make_unique<content_type_uptr>("application/json")] | this;
   }
 
   virtual ~flow_container() { }
