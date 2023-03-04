@@ -1,3 +1,5 @@
+using namespace flowpp;
+
 using content_type_uptr = std::unique_ptr<flowpp::network::http::content_type>;
 using port_uptr = std::unique_ptr<flowpp::network::port>;
 using graph_uptr = std::unique_ptr<graph>;
