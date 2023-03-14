@@ -5,8 +5,8 @@ using namespace flowpp;
 
 class observable {
   using data_uptr = std::unique_ptr<data>;
-  using observer_uptr = std::unique_ptr<observer>;
-  using observer_tbl_uptr = std::unique_ptr<std::map<string, observer_uptr>>;
+  using obs_uptr = std::unique_ptr<observer>;
+  using obs_tbl_uptr = std::unique_ptr<std::map<string, observer_uptr>>;
   using data_list_uptr = std::unique_ptr<std::list<data_uptr>>;
 
 public:
@@ -22,10 +22,10 @@ public:
   }
 
   void add(data_uptr dat) { _data_list.push_back(dat); }
-  void lookup(std::string key, observer_uptr obs) { _obs_map.find( key, { obs } ); }
+  void lookup(std::string key, obs_uptr obs) { _obs_map.find( key, { obs } ); }
 
 private:
-  observer_tbl_uptr _obs_map;
+  obs_tbl_uptr _obs_map;
   data_list_uptr _data_list;
 };
 
