@@ -4,6 +4,7 @@
 using namespace flowpp;
 
 using data_uptr = std::unique_ptr<data>;
+using sink_uptr = std::unique_ptr<sink>;
 
 class source : public observable {
 
