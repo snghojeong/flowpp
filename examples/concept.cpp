@@ -31,7 +31,7 @@ void main() {
 
   engine_uptr->run(INFINITE /* timeout */, 100 /* number of loop */);
   
-  printf("KEY counding: %d", counter_uptr->get()); /* print 100 */
+  printf("KEY count: %d", counter_uptr->get()); /* print 100 */
   
   return;
 }
