@@ -6,7 +6,7 @@ using namespace flowpp;
 class observable {
   using data_uptr = std::unique_ptr<data>;
   using obs_uptr = std::unique_ptr<observer>;
-  using obs_tbl_uptr = std::unique_ptr<std::map<string, observer_uptr>>;
+  using obs_map_uptr = std::unique_ptr<std::map<string, observer_uptr>>;
   using data_list_uptr = std::unique_ptr<std::list<data_uptr>>;
 
 public:
@@ -25,7 +25,7 @@ public:
   void lookup(std::string key, obs_uptr obs) { _obs_map.find( key, { obs } ); }
 
 private:
-  obs_tbl_uptr _obs_map;
+  obs_map_uptr _obs_map;
   data_list_uptr _data_list;
 };
 
