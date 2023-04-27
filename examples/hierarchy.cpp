@@ -8,6 +8,10 @@ public:
     http_builder[make_unique<content_type_uptr>("application/json")] | this;
   }
 
+  explicit flow_container(std::string contents_type) {
+    http_builder[make_unique<content_type_uptr>(contents_type)] | this;
+  }
+
   virtual ~flow_container() { }
 };
 
