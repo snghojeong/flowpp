@@ -1,3 +1,5 @@
+using namespace flowpp;
+
 using content_type_uptr = unique_ptr<flowpp::network::http::content_type>;
 using json_enc_uptr = unique_ptr<json_encoder>;
 using file_src_uptr = unique_ptr<file_src>;
