@@ -22,8 +22,7 @@ public:
   }
 
   void add(data_uptr dat) { _data_list.push_back(dat); }
-  void lookup(std::string key, obs_uptr obs) { _obs_map.find( key, { obs } ); }
-
+  
 private:
   obs_map_uptr _obs_map;
   data_list_uptr _data_list;
