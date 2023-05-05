@@ -20,5 +20,6 @@ void main()
   // FTP
   tcp_rx[port(22)] | ftp_parser | file_writer("filename");
 
-  tcp_graph.run(INFINITE /* timeout */, INFINITE /* number of loop */);
+  auto result = tcp_graph.run(INFINITE /* timeout */, INFINITE /* number of loop */);
+  std::cout << result << std::endl;
 }
