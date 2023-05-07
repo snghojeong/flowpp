@@ -12,6 +12,7 @@ public:
   virtual ~source() {}
 
   virtual data_uptr generate() = 0;
+  virtual data_uptr get() = 0;
 }
 #endif
 
