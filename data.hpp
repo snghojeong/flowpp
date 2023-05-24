@@ -1,6 +1,8 @@
 #ifndef _DATA_HPP_
 #define _DATA_HPP_
 
+using namespace flowpp;
+
 class data <typename T> {
 public:
   virtual const format *format() const = 0;
