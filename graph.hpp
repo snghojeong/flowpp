@@ -1,6 +1,8 @@
 #ifndef _GRAPH_H_
 #define _GRAPH_H_
 
+using namespace flowpp;
+
 using obsvl_uptr = std::unique_ptr<observable>;
 
 class graph {
