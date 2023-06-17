@@ -2,26 +2,26 @@
 
 using namespace flowpp;
 
-using data_uptr = std::unique_ptr<flowpp::data>;
-using fltr_uptr = std::unique_ptr<flowpp::filter>;
+using data_uptr = std::unique_ptr<data>;
+using fltr_uptr = std::unique_ptr<filter>;
 
-class counter : public flowpp::source {
+class counter : public source {
 public:
   explicit counter() { _cnt = 0; }
   virtual ~counter() {}
 
   data_uptr generate() {
-    return std::make_unique<flowpp::data>(_cnt++);
+    return std::make_unique<data>(_cnt++);
   }
 };
 
-class counter2 : public flowpp::source {
+class counter2 : public source {
 public:
   explicit counter2() { _cnt = 0; }
 
   data_uptr generate() {
     _cnt += 2;
-    return std::make_unique<flowpp::data>(_cnt);
+    return std::make_unique<data>(_cnt);
   }
 };
 
