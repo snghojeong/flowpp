@@ -20,9 +20,6 @@ public:
       });
     });
   }
-
-  void add(data_uptr dat) { _data_list.push_back(dat); }
-  
 private:
   obs_map_uptr _obs_map;
   data_list_uptr _data_list;
