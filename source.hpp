@@ -1,7 +1,7 @@
+using namespace flowpp;
+
 #ifndef _SOURCE_HPP_
 #define _SOURCE_HPP_
-
-using namespace flowpp;
 
 using data_uptr = std::unique_ptr<data>;
 
