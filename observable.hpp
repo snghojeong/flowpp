@@ -1,7 +1,7 @@
+using namespace flowpp;
+
 #ifndef _OBSERVERABLE_HPP_
 #define _OBSERVERABLE_HPP_
-
-using namespace flowpp;
 
 class observable {
   using data_uptr = std::unique_ptr<data>;
