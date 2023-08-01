@@ -34,6 +34,7 @@ void main() {
   engine_uptr->run(INFINITE /* timeout */, 100 /* number of loop */);
   
   printf("KEY count: %d", counter_uptr->get()); /* print 100 */
+  assert(counter_uptr->get() == 100);
   
   return;
 }
