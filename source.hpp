@@ -12,8 +12,6 @@ public:
   virtual ~source() {}
 
   virtual data_uptr generate() = 0;
-  virtual data_uptr get() = 0;
-  virtual void set(data_uptr d) = 0;
 }
 #endif
 
