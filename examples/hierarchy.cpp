@@ -6,10 +6,6 @@ using file_src_uptr = unique_ptr<file_src>;
 
 class http_flow_container : public emitter, public receiver {
 public:
-  explicit flow_container() {
-    http_builder[make_unique<content_type_uptr>("application/json")] | this;
-  }
-
   explicit flow_container(std::string contents_type) {
     http_builder[make_unique<content_type_uptr>(contents_type)] | this;
   }
