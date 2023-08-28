@@ -13,6 +13,9 @@ public:
   data_uptr generate() {
     return std::make_unique<data>(_cnt++);
   }
+
+private:
+  int _cnt;
 };
 
 class counter2 : public source {
