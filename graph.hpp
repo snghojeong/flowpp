@@ -28,6 +28,10 @@ public:
     run(INFINITE, loop);
   }
 
+  void run() {
+    run(INFINITE, INFINITE);
+  }
+
 private:
   std::list<obsvl_uptr> _obsvl_list;
 };
