@@ -8,7 +8,6 @@ using fltr_uptr = std::unique_ptr<filter>;
 class counter : public source {
 public:
   explicit counter() { _cnt = 0; }
-  virtual ~counter() {}
 
   data_uptr generate() {
     return std::make_unique<data>(_cnt++);
