@@ -11,7 +11,6 @@ class observable {
 
 public:
   explicit observable() { _obs_map = make_unique<obs_map_uptr>(); _data_list = make_unique<data_list_uptr>(); }
-  virtual ~observable() {}
 
   virtual void process() {
     std::for_each(_dat_list.begin(), _dat_list.end(), [this] (data_uptr dat) {
