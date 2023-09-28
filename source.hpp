@@ -10,8 +10,6 @@ class source : public observable {
 public:
   explicit source() {}
   virtual ~source() {}
-
-  virtual void start() = 0;
 }
 #endif
 
