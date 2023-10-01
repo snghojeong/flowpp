@@ -7,9 +7,6 @@ using obsvl_uptr = std::unique_ptr<observable>;
 
 class graph {
 public:
-  explicit graph() { }
-  virtual ~graph() { }
-
   void run(time_t timeout, unsigned long loop) {
     auto start_time = 0;
     auto curr_time = 0;
