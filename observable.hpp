@@ -10,7 +10,10 @@ class observable {
   using data_list_uptr = std::unique_ptr<std::list<data_uptr>>;
 
 public:
-  explicit observable() { _obs_map = make_unique<obs_map_uptr>(); _data_list = make_unique<data_list_uptr>(); }
+  explicit observable() { 
+    _obs_map = make_unique<obs_map_uptr>(); 
+    _data_list = make_unique<data_list_uptr>(); 
+  }
 
   virtual void process() {
     std::for_each(_dat_list.begin(), _dat_list.end(), [this] (data_uptr dat) {
@@ -19,7 +22,9 @@ public:
       });
     });
   }
+
 private:
+
   obs_map_uptr _obs_map;
   data_list_uptr _data_list;
 };
