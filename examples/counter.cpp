@@ -27,7 +27,7 @@ public:
   }
 };
 
-int main()
+void main()
 {
   graph_uptr cnter_graph_uptr = make_unique<graph>();
 
@@ -37,6 +37,4 @@ int main()
   cnter_graph_uptr->run(INFINITE/* timeout */, 10 /* numnber of loop */);
 
   std::cout << cnter->get_cnt(); // print 10
-
-  return 0;
 }
