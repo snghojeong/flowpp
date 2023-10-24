@@ -6,10 +6,11 @@ using tcp_recv_uptr = std::unique_ptr<flowpp::network::tcp_receiver>;
 
 void main()
 {
-  graph_uptr tcp_graph;
-  auto src = tcp_graph.get<json_src>();
-  auto tcp_rx = tcp_graph.get<tcp_receiver>();
-  auto tcp_tx = tcp_graph.get<tcp_sender>();
+  graph_uptr tcp_tx_graph;
+  graph_uptr tcp_rx_graph;
+  auto src = tcp_tx_graph.get<json_src>();
+  auto tcp_rx = tcp_rx_graph.get<tcp_receiver>();
+  auto tcp_tx = tcp_tx_graph.get<tcp_sender>();
 
   // HTTP
   src["JSON"] | json_builder | http_builder | tcp_tx; 
@@ -19,6 +20,6 @@ void main()
   // FTP
   tcp_rx[port(22)] | ftp_parser | file_writer("filename");
 
-  auto result = tcp_graph.run(1000 /* timeout */, INFINITE /* number of loop */);
+  auto result = tcp_rx_graph.run(1000 /* timeout */, INFINITE /* number of loop */);
   std::cout << result << std::endl;
 }
