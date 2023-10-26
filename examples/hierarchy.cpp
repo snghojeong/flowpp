@@ -19,5 +19,5 @@ int main()
 
   file_src | json_enc | http_container | tcp_sender;
 
-  graph->run();
+  graph->run(INFINITE, INFINITE);
 }
