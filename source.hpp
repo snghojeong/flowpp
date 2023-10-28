@@ -10,6 +10,8 @@ class source : public observable {
 public:
   explicit source() {}
   virtual ~source() {}
+
+  data_uptr generate() = 0;
 }
 #endif
 
