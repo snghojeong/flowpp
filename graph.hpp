@@ -7,7 +7,7 @@ using obsvl_uptr = std::unique_ptr<observable>;
 
 class graph {
 public:
-  void run(time_t timeout, unsigned long loop) {
+  void run(time_t timeout, int loop) {
     auto start_time = 0;
     auto curr_time = 0;
     while ((loop <= 0) || ((cnt++ < loop) && (start_time > curr_time))) {
