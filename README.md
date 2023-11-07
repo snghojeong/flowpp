@@ -14,6 +14,7 @@ The class could be ether "observable" and "observer" then you can express it lik
 observable | observable;
 observer | observer;
 observable | observer | observer;
+observable | observable | observer;
 
 And we can use filter to get specific type of data from observable.
 
