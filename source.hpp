@@ -12,7 +12,7 @@ public:
   virtual ~source() {}
 
   data_uptr pull() = 0;
-  void put(data_uptr dat) = 0;
+  void push(data_uptr dat) = 0;
 }
 #endif
 
