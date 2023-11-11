@@ -30,6 +30,7 @@ void main() {
 
   scanner_uptr | print_uptr;
   scanner_uptr | counter_uptr;
+  scanner_uptr | file_out_uptr;
 
   engine_uptr->run(INFINITE /* timeout */, 100 /* number of loop */);
   
