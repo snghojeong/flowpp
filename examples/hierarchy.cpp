@@ -18,6 +18,7 @@ int main()
   http_flow_container_uptr http_container;
 
   file_src | json_enc | http_container | tcp_sender;
+  tcp_recver | http_container | json_dec | file_sink;
 
   graph->run(INFINITE, INFINITE);
 }
