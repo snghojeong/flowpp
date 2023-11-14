@@ -8,12 +8,12 @@ void main()
 {
   graph_uptr tcp_tx_graph;
   graph_uptr tcp_rx_graph;
-  auto src = tcp_tx_graph.get<json_src>();
+  auto file_src = tcp_tx_graph.get<json_src>();
   auto tcp_rx = tcp_rx_graph.get<tcp_receiver>();
   auto tcp_tx = tcp_tx_graph.get<tcp_sender>();
 
   // HTTP
-  src["JSON"] | json_builder | http_builder | tcp_tx; 
+  file_src["JSON"] | json_builder | http_builder | tcp_tx; 
   tcp_rx[port(80)] |    http_parser[content_type("application/json")] | file_writer("recv.json");
   tcp_rx[port(8080)] |  http_parser[content_type("plain/text")] | [] (const std::string& txt) { cout << txt; };
 
