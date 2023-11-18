@@ -25,6 +25,8 @@ public:
     });
   }
 
+  virtual data_uptr generate() = 0;
+
 private:
 
   obs_map_uptr _obs_map;
