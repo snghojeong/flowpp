@@ -1,7 +1,7 @@
 using namespace flowpp;
 
-#ifndef _GRAPH_H_
-#define _GRAPH_H_
+#ifndef _GRAPH_HPP_
+#define _GRAPH_HPP_
 
 using obsvl_uptr = std::unique_ptr<observable>;
 
