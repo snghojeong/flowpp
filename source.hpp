@@ -11,7 +11,7 @@ public:
   explicit source() {}
   virtual ~source() {}
 
-  data_uptr pull() = 0;
+  data_uptr poll() = 0;
   void push(data_uptr dat) = 0;
 }
 #endif
