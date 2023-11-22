@@ -11,6 +11,7 @@ private:
 public:
   virtual void subscribe(obsvl_uptr obsvl) = 0 const;
   virtual void poll() = 0;
+  virtual void callback() = 0;
 };
 
 #endif
