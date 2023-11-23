@@ -3,7 +3,6 @@
 using namespace flowpp;
 
 using data_uptr = std::unique_ptr<data>;
-using fltr_uptr = std::unique_ptr<filter>;
 
 class counter : public source {
 public:
