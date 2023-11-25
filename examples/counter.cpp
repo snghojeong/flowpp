@@ -36,4 +36,5 @@ void main()
   cnter_graph_uptr->run(INFINITE/* timeout */, 10 /* numnber of loop */);
 
   std::cout << cnter->get_cnt(); // print 10
+  std::cout << cnter2->get_cnt(); // print 20
 }
