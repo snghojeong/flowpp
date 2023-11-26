@@ -24,6 +24,8 @@ public:
     _cnt += 2;
     return std::make_unique<data>(_cnt);
   }
+private:
+  int _cnt;
 };
 
 void main()
