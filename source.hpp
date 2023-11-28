@@ -13,6 +13,7 @@ public:
 
   data_uptr poll() = 0;
   void push(data_uptr dat) = 0;
+  void listen(void (*callback)) = 0;
 }
 #endif
 
