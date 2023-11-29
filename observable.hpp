@@ -25,7 +25,7 @@ public:
     });
   }
 
-  virtual data_uptr generate() = 0;
+  virtual data_uptr poll() = 0;
 
 private:
 
