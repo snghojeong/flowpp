@@ -21,7 +21,7 @@ public:
     run(timeout, INFINITE);
   }
   
-  void run(unsigned long loop) {
+  void run(long long loop) {
     run(INFINITE, loop);
   }
 
