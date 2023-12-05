@@ -26,7 +26,7 @@ public:
   }
 
   virtual data_uptr poll() = 0;
-  virtual void callback(std::function func) = 0;
+  virtual void listen(void (*callback)) = 0;
 
 private:
 
