@@ -32,9 +32,9 @@ void main() {
   scanner_uptr | counter_uptr;
   scanner_uptr | file_out_uptr;
 
-  engine_uptr->run(1000 /* timeout */, 100 /* number of loop */);
+  engine_uptr->run(1000 /* timeout */, 1000 /* number of loop */);
   
-  printf("KEY count: %d", counter_uptr->get()); /* print 100 */
+  printf("KEY count: %d", counter_uptr->get()); /* print 1000 */
   
   return;
 }
