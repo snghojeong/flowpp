@@ -3,6 +3,8 @@ using namespace flowpp;
 #ifndef _DATA_HPP_
 #define _DATA_HPP_
 
+using data_uptr = std::unique_ptr<data>;
+
 class data <typename T> {
 public:
   virtual void set(T value) = 0;
