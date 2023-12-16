@@ -1,8 +1,8 @@
 using namespace flowpp;
 
-using port_uptr = std::unique_ptr<flowpp::network::port>;
+using port_uptr = std::unique_ptr<ip_port>;
 using graph_uptr = std::unique_ptr<graph>;
-using tcp_recv_uptr = std::unique_ptr<flowpp::network::tcp_receiver>;
+using tcp_recv_uptr = std::unique_ptr<tcp_receiver>;
 using data_uptr = std::unique_ptr<data>;
 
 void main()
