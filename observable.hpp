@@ -28,8 +28,7 @@ public:
   virtual data_uptr poll() = 0;
   virtual void listen(void (*callback)) = 0;
 
-private:
-
+protected:
   obs_map_uptr _obs_map;
   data_list_uptr _data_list;
 };
