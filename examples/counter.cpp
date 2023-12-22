@@ -30,7 +30,8 @@ private:
 
 void main()
 {
-  graph_uptr cnter_graph_uptr = make_unique<graph>();
+  graph_uptr cnter1_graph_uptr = make_unique<graph>();
+  graph_uptr cnter2_graph_uptr = make_unique<graph>();
 
   auto cnter = cnter_graph_uptr.get<counter>();
   auto cnter2 = cnter_graph_uptr.get<counter2>();
