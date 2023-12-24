@@ -11,7 +11,7 @@ public:
   explicit source() {}
   virtual ~source() {}
 
-  data_uptr poll() = 0;
+  data_uptr poll(int64_t timeout) = 0;
   void listen(void (*callback)) = 0;
 }
 #endif
