@@ -37,8 +37,8 @@ void main()
   auto cnter2 = cnter2_graph_uptr.get<counter2>();
   
   cnter1_graph_uptr->run(INFINITE/* timeout */, 10 /* numnber of loop */);
-  cnter2_graph_uptr->run(INFINITE/* timeout */, 10 /* numnber of loop */);
+  cnter2_graph_uptr->run(INFINITE/* timeout */, 20 /* numnber of loop */);
 
   std::cout << cnter->get_cnt(); // print 10
-  std::cout << cnter2->get_cnt(); // print 20
+  std::cout << cnter2->get_cnt(); // print 40
 }
