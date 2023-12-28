@@ -21,10 +21,6 @@ public:
   void run(time_t timeout) {
     run(timeout, INFINITE);
   }
-  
-  void run(long long loop) {
-    run(INFINITE, loop);
-  }
 
   void run() {
     run(INFINITE, INFINITE);
