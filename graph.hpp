@@ -26,7 +26,7 @@ public:
     run(INFINITE, INFINITE);
   }
 
-private:
+protected:
   std::list<obsvl_uptr> _obsvl_list;
 };
 
