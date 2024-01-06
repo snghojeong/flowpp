@@ -19,7 +19,7 @@ public:
 
   virtual void process() = 0;
   virtual data_uptr poll() = 0;
-  virtual void listen(void (*callback)) = 0;
+  virtual void listen(std::function callback) = 0;
 
 protected:
   obs_map_uptr _obs_map;
