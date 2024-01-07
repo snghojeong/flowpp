@@ -10,7 +10,6 @@ public:
   virtual void set(T value) = 0;
   virtual T get() const = 0;
   virtual data_uptr clone() const = 0;
-  virtual const std::string to_str() const = 0;
   virtual const bytes_uptr serialize() const = 0;
   virtual const void deserialize(bytes_uptr bs) const = 0;
 };
