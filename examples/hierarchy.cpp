@@ -10,6 +10,10 @@ public:
   explicit flow_container(std::string contents_type) {
     http_builder[make_unique<content_type_uptr>(contents_type)] | this;
   }
+
+  data_uptr poll(int64_t timeout) {
+    return make_unique<data<http_msg>>();
+  }
 };
 
 int main()
