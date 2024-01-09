@@ -12,7 +12,7 @@ public:
   virtual ~source() {}
 
   data_uptr poll(int64_t timeout) = 0;
-  void listen(std::function callback) = 0;
+  void listen(std::function callback, int64_t period) = 0;
 }
 #endif
 
