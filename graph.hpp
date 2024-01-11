@@ -8,7 +8,7 @@ using data_uptr = std::unique_ptr<data>;
 
 class graph {
 public:
-  void run(time_t timeout, int loop) {
+  void run(int64_t timeout, int loop) {
     auto start_time = 0;
     auto curr_time = 0;
     while ((loop <= 0) || ((cnt++ < loop) && (start_time > curr_time))) {
@@ -18,7 +18,7 @@ public:
     }
   }
 
-  void run(time_t timeout) {
+  void run(int64_t timeout) {
     run(timeout, INFINITE);
   }
 
