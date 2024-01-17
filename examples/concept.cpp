@@ -29,7 +29,7 @@ void main() {
   auto print_uptr = engine_uptr->instantiate<txt_printer>();
   auto counter_uptr = engine_uptr->instantiate<counter>();
 
-  scanner_uptr | print_uptr;
+  scanner_uptr | print_uptr; // subscribe 
   scanner_uptr | counter_uptr;
   scanner_uptr | file_out_uptr;
 
