@@ -9,7 +9,7 @@ public:
   explicit counter() { _cnt = 0; }
 
   data_uptr poll(int64_t timeout) {
-    return std::make_unique<data>(_cnt++);
+    return std::make_unique<data<int>>(_cnt++);
   }
 
 private:
