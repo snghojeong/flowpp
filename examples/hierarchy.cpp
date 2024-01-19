@@ -18,12 +18,12 @@ public:
 
 int main()
 {
-  auto file_src = graph->get<file_src_uptr>();
-  auto json_enc = graph->get<json_enc_uptr>();
-  http_flow_container_uptr http_container;
+  auto file_src_uptr = graph->get<file_src>();
+  auto json_enc_uptr = graph->get<json_enc>();
+  auto http_container_uptr = graph->get<http_flow_container>();
 
-  file_src | json_enc | http_container | tcp_sender;
-  tcp_recver | http_container | json_dec | file_sink;
+  file_src_uptr | json_enc_uptr | http_container_uptr | tcp_sender_uptr;
+  tcp_recver_uptr | http_container_uptr | json_dec_uptr | file_sink_uptr;
 
   graph->run(INFINITE, INFINITE);
 }
