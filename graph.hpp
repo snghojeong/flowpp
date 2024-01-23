@@ -13,7 +13,7 @@ public:
     auto curr_time = 0;
     while ((loop <= 0) || ((cnt++ < loop) && (start_time > curr_time))) {
       std::for_each(_obsvl_list.begin(), _obsvl_list.end(), 
-          [] (obsvl_uptr obsbl) { obsbl->poll(); });
+          [] (obsvl_uptr obsbl) { return obsbl->poll(); });
       curr_time = millis();
     }
   }
