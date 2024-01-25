@@ -17,7 +17,6 @@ public:
 
   virtual ~observable() { }
 
-  virtual void process() = 0;
   virtual data_uptr poll(int64_t timeout) = 0;
   virtual void listen(std::function callback) = 0;
 
