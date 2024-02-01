@@ -6,7 +6,7 @@ using namespace flowpp;
 class observable {
   using data_uptr = std::unique_ptr<data>;
   using obs_uptr = std::unique_ptr<observer>;
-  using obs_map_uptr = std::unique_ptr<std::map<string, observer_uptr>>;
+  using obs_map_uptr = std::unique_ptr<std::map<string, obs_uptr>>;
   using data_list_uptr = std::unique_ptr<std::list<data_uptr>>;
 
 public:
