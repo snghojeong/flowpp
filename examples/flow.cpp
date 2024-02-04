@@ -9,6 +9,7 @@ void main() {
   graph_uptr tcp_tx_graph;
   graph_uptr tcp_rx_graph;
   auto file_src = tcp_tx_graph.get<json_src>();
+  auto file_writer = tcp_rx_graph.get<json_src>();
   auto tcp_rx = tcp_rx_graph.get<tcp_receiver>();
   auto tcp_tx = tcp_tx_graph.get<tcp_sender>();
 
