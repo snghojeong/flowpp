@@ -9,11 +9,11 @@ public:
   explicit counter() { _cnt = 0; }
 
   data_uptr poll(int64_t timeout) {
-    return std::make_unique<data<int>>(_cnt++);
+    return std::make_unique<data<uint32_t>>(_cnt++);
   }
 
 private:
-  int _cnt;
+  uint32_t _cnt;
 };
 
 class counter2 : public source {
