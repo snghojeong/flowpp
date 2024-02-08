@@ -12,7 +12,7 @@ public:
     auto start_time = 0;
     auto curr_time = 0;
     auto cnt = 0;
-    while ((loop <= 0) || ((cnt++ < loop) && (start_time > curr_time))) {
+    while ((loop <= 0) || ((cnt++ < loop) && (start_time+timeout > curr_time))) {
       std::for_each(_obsvl_list.begin(), _obsvl_list.end(), 
           [] (obsvl_uptr obsbl) { obsbl->poll(timeout); });
       curr_time = millis();
