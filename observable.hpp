@@ -11,7 +11,7 @@ class observable {
 
 public:
   explicit observable() { 
-    _obs_map = make_unique<obs_map_uptr>(); 
+    _obs_map = make_unique<std::map<string, obs_uptr>>(); 
     _data_list = make_unique<std::list<data_uptr>>(); 
   }
 
