@@ -12,7 +12,7 @@ public:
   virtual size_t size() const = 0;
   virtual data_uptr clone() const = 0;
   virtual void parse(std::string str) = 0;
-  virtual std::string build() = 0;
+  virtual std::string to_str() = 0;
   virtual const bytes_uptr serialize() const = 0;
   virtual const void deserialize(bytes_uptr bs) = 0;
 };
