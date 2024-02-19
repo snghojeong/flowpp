@@ -11,7 +11,7 @@ public:
     http_builder[make_unique<content_type_uptr>(contents_type)] | this;
   }
 
-  data_uptr poll(int64_t timeout) {
+  data_uptr poll(uint64_t timeout) {
     return make_unique<data<http_msg>>();
   }
 };
