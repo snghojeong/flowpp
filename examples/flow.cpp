@@ -14,7 +14,7 @@ void main() {
   auto tcp_tx = tcp_tx_graph.get<tcp_sender>();
 
   // HTTP
-  file_src["JSON"] | json_builder | http_builder | tcp_tx; 
+  file_src["JSON"] | json_builder | http_builder | tcp_tx["127.0.0.1"]; 
   tcp_rx[port(80)] |    http_parser[content_type("application/json")] | json_parser() | file_writer("recv.json");
   tcp_rx[port(8080)] |  http_parser[content_type("plain/text")] | [] (const std::string& txt) { cout << txt; };
 
