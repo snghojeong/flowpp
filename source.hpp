@@ -12,6 +12,8 @@ class source : public observable {
 public:
   explicit source() {}
   virtual ~source() {}
+
+  data_uptr poll() = 0;
 }
 #endif
 
