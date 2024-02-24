@@ -13,7 +13,7 @@ public:
   }
 
 private:
-  uint32_t _cnt;
+  uint_t _cnt;
 };
 
 class counter2 : public source {
