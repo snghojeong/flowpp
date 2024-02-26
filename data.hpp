@@ -7,6 +7,7 @@ using data_uptr = std::unique_ptr<data>;
 
 class data <typename T> {
 public:
+  data() { }
   virtual void set(T value) = 0;
   virtual T get() const = 0;
   virtual size_t size() const = 0;
