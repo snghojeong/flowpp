@@ -18,7 +18,7 @@ public:
   virtual ~observable() { }
 
   virtual data_uptr poll(uint64_t timeout) = 0;
-  virtual void listen(std::function callback, uint64_t timeout) = 0;
+  virtual void listen(std::function callback) = 0;
 
 protected:
   obs_map_uptr _obs_map;
