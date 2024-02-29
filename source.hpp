@@ -13,7 +13,7 @@ public:
   explicit source() {}
   virtual ~source() {}
 
-  data_uptr poll() = 0;
+  data_uptr poll(uint64_t timeout) = 0;
 }
 #endif
 
