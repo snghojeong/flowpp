@@ -3,7 +3,7 @@ using namespace flowpp;
 using content_type_uptr = unique_ptr<flowpp::network::http::content_type>;
 using json_enc_uptr = unique_ptr<json_encoder>;
 using file_src_uptr = unique_ptr<file_src>;
-using data_uptr = unique_ptr<data>;
+using data_uptr<T> = unique_ptr<data<T>>;
 
 class http_flow_container : public observer, public observable {
 public:
