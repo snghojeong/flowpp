@@ -1,6 +1,6 @@
 using namespace flowpp;
 
-using data_uptr = std::unique_ptr<data>;
+using data_uptr<typename T> = std::unique_ptr<data<T>>;
 using scanner_uptr = std::unique_ptr<scanner>;
 using counter_uptr = std::unique_ptr<counter>;
 using engine_uptr = std::unique_ptr<flowpp_engine>;
