@@ -3,7 +3,7 @@ using namespace flowpp;
 #ifndef _DATA_HPP_
 #define _DATA_HPP_
 
-using data_uptr = std::unique_ptr<data>;
+using data_uptr<typename T> = std::unique_ptr<data<T>>;
 
 class data <typename T> {
 public:
