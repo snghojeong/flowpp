@@ -5,7 +5,7 @@ using namespace flowpp;
 
 class data;
 
-using data_uptr = std::unique_ptr<data>;
+using data_uptr<typename T> = std::unique_ptr<data<T>>;
 
 class source : public observable {
 
