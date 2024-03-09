@@ -3,7 +3,7 @@ using namespace flowpp;
 #ifndef _OBSERVER_HPP_
 #define _OBSERVER_HPP_
 
-using data_uptr = std::unique_ptr<data>;
+using data_uptr<typename T> = std::unique_ptr<data<T>>;
 
 class observer {
 public:
