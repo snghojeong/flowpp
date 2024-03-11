@@ -4,7 +4,7 @@ using namespace flowpp;
 #define _GRAPH_HPP_
 
 using obsvl_uptr = std::unique_ptr<observable>;
-using data_uptr = std::unique_ptr<data>;
+using data_uptr<typename T> = std::unique_ptr<data<T>>;
 
 class graph {
 public:
