@@ -9,7 +9,7 @@ using obs_uptr = std::unique_ptr<observer>;
 class printer : public observer {
 public:
   virtual void notify(data_uptr<std::string> dat) {
-    std::cout << dat;
+    std::cout << dat->get();
   }
 };
 
