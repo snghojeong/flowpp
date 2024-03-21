@@ -8,7 +8,7 @@ class counter : public source {
 public:
   explicit counter() { _cnt = 0; }
 
-  data_uptr poll(int64_t timeout) {
+  data_uptr<uint32_t> poll(int64_t timeout) {
     return std::make_unique<data<uint32_t>>(_cnt++);
   }
 
