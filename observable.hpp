@@ -3,7 +3,8 @@ using namespace flowpp;
 #ifndef _OBSERVERABLE_HPP_
 #define _OBSERVERABLE_HPP_
 
-class observable<typename T> {
+template<typename T>
+class observable {
   using data_uptr<T> = std::unique_ptr<data<T>>;
   using obs_uptr = std::unique_ptr<observer>;
   using obs_map_uptr = std::unique_ptr<std::map<string, obs_uptr>>;
