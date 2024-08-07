@@ -5,7 +5,7 @@ using namespace flowpp;
 
 template<typename T>
 class observable {
-  using data_uptr<T> = std::unique_ptr<data<T>>;
+  using data_uptr = std::unique_ptr<data<T>>;
   using obs_uptr = std::unique_ptr<observer>;
   using obs_map_uptr = std::unique_ptr<std::map<string, obs_uptr>>;
   using data_list_uptr<T> = std::unique_ptr<std::list<data_uptr<T>>>;
