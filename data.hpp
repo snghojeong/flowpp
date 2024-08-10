@@ -3,7 +3,8 @@ using namespace flowpp;
 #ifndef _DATA_HPP_
 #define _DATA_HPP_
 
-class data <typename T> {
+template <typename T>
+class data {
 public:
   data() { }
   virtual void set(T value) = 0;
