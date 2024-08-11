@@ -13,7 +13,7 @@ class observable {
 public:
   explicit observable() { 
     _obs_map = make_unique<std::map<string, obs_uptr>>(); 
-    _data_list = make_unique<std::list<data_uptr<T>>>(); 
+    _data_list = make_unique<std::list<data_uptr>(); 
   }
 
   virtual ~observable() { }
