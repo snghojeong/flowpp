@@ -3,10 +3,10 @@ using namespace flowpp;
 #ifndef _GRAPH_HPP_
 #define _GRAPH_HPP_
 
-using obsvl_uptr = std::unique_ptr<observable>;
-using data_uptr<typename T> = std::unique_ptr<data<T>>;
-
+template <typename T>
 class graph {
+  using obsvl_uptr = std::unique_ptr<observable>;
+  using data_uptr = std::unique_ptr<data<T>>;
 public:
   void run(uint64_t timeout, int loop) {
     auto start_time = 0;
