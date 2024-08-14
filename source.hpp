@@ -5,15 +5,14 @@ using namespace flowpp;
 
 class data;
 
-using data_uptr<typename T> = std::unique_ptr<data<T>>;
-
-class source<typename T> : public observable {
-
+template <typename T>
+class source : public observable {
+using data_uptr = std::unique_ptr<data<T>>;
 public:
   explicit source() {}
   virtual ~source() {}
 
-  data_uptr<T> poll(uint64_t timeout) = 0;
+  data_uptr poll(uint64_t timeout) = 0;
 }
 #endif
 
