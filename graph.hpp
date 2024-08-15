@@ -27,8 +27,6 @@ public:
     run(INFINITE, INFINITE);
   }
 
-  T get<T>() = 0;
-
 protected:
   std::list<obsvl_uptr> _obsvl_list;
 };
