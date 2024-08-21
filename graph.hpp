@@ -5,7 +5,7 @@ using namespace flowpp;
 
 template <typename T>
 class graph {
-  using obsvl_uptr = std::unique_ptr<observable>;
+  using obsvl_uptr = std::unique_ptr<observable<T>>;
   using data_uptr = std::unique_ptr<data<T>>;
 public:
   void run(uint64_t timeout, int loop) {
