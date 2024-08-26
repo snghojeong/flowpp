@@ -2,14 +2,13 @@
 
 using namespace flowpp;
 
-using data_uptr<typename T> = std::unique_ptr<data<T>>;
-
 class counter : public source {
+using data_uptr = std::unique_ptr<data<uint32_t>>;
 public:
   explicit counter() { _cnt = 0; }
 
-  data_uptr<uint32_t> poll(int64_t timeout) {
-    return std::make_unique<data<uint32_t>>(_cnt++);
+  data_uptr poll(int64_t timeout) {
+    return std::make_unique<data_uptr>(_cnt++);
   }
 
 private:
