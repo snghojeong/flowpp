@@ -9,7 +9,7 @@ class graph {
   using data_uptr = std::unique_ptr<data<T>>;
 public:
   void run(uint64_t timeout, int loop) {
-    auto start_time = 0;
+    const auto start_time = millis();
     auto curr_time = 0;
     auto cnt = 0;
     while ((loop <= 0) || ((cnt++ < loop) && (start_time+timeout > curr_time))) {
