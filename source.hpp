@@ -13,7 +13,7 @@ public:
   virtual ~source() {}
 
   data_uptr poll(uint64_t timeout) = 0;
-  void listen() = 0;
+  void listen(std::function callback) = 0;
 }
 #endif
 
