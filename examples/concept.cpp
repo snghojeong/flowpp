@@ -1,6 +1,5 @@
 using namespace flowpp;
 
-using data_uptr = std::unique_ptr<data<T>>;
 using scanner_uptr = std::unique_ptr<scanner>;
 using counter_uptr = std::unique_ptr<counter>;
 using engine_uptr = std::unique_ptr<flowpp_engine>;
@@ -8,6 +7,7 @@ using obs_uptr = std::unique_ptr<observer>;
 
 template<typename T>
 class printer : public observer {
+using data_uptr = std::unique_ptr<data<T>>;
 public:
   virtual void notify(data_uptr<std::string> dat) {
     std::cout << dat->get();
