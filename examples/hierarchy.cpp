@@ -3,7 +3,7 @@ using namespace flowpp;
 using content_type_uptr = unique_ptr<flowpp::network::http::content_type>;
 using json_enc_uptr = unique_ptr<json_encoder>;
 using file_src_uptr = unique_ptr<file_src>;
-using data_uptr<T> = unique_ptr<data<T>>;
+using data_uptr = unique_ptr<data<http_msg>>;
 
 class http_flow_container : public observer, public observable {
 public:
@@ -11,7 +11,7 @@ public:
     http_builder[make_unique<content_type_uptr>(contents_type)] | this;
   }
 
-  data_uptr<>http_msg poll(uint64_t timeout) {
+  data_uptr poll(uint64_t timeout) {
     return make_unique<data<http_msg>>();
   }
 };
