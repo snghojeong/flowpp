@@ -16,6 +16,8 @@ public:
   }
 };
 
+using http_container_uptr = unique_ptr<http_flow_container>;
+
 int main()
 {
   auto file_src_uptr = graph->get<file_src>();
