@@ -21,6 +21,7 @@ using http_container_uptr = unique_ptr<http_flow_container>;
 int main()
 {
   auto file_src_uptr = graph->get<file_src>();
+  auto file_sink_uptr = graph->get<file_sink>();
   auto json_enc_uptr = graph->get<json_enc>();
   auto http_container_uptr = graph->get<http_flow_container>();
   auto tcp_recver_uptr = graph->get<tcp_recver>();
