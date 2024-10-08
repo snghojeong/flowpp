@@ -16,7 +16,7 @@ void main() {
   // HTTP
   file_src["JSON"] | json_builder | http_builder | tcp_tx["127.0.0.1"]; 
   tcp_rx[port(80)] |    http_parser[content_type("application/json")] | json_parser() | file_writer("recv.json");
-  tcp_rx[port(8080)] |  http_parser[content_type("html")] | [] (const std::string& txt) { cout << txt; };
+  tcp_rx[port(8080)] |  http_parser[content_type("plain/text")] | [] (const std::string& txt) { cout << txt; };
 
   // FTP
   tcp_rx[port(22)] | ftp_parser | file_writer("filename");
