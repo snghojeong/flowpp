@@ -3,7 +3,7 @@
 using namespace flowpp;
 
 class counter : public source {
-using data_uptr = std::unique_ptr<data<uint32_t>>;
+using data_uptr = std::unique_ptr<data<uint_t>>;
 public:
   explicit counter() { _cnt = 0; }
 
