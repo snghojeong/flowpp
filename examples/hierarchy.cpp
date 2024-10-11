@@ -30,5 +30,6 @@ int main()
   file_src_uptr | json_enc_uptr | http_container_uptr | tcp_sender_uptr;
   tcp_recver_uptr | http_container_uptr | json_dec_uptr | file_sink_uptr;
 
-  graph->run(INFINITE, INFINITE);
+  tx_graph->run(INFINITE, INFINITE);
+  rx_graph->run(INFINITE, INFINITE);
 }
