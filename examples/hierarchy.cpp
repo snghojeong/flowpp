@@ -23,7 +23,7 @@ int main()
   auto file_src_uptr = tx_graph->get<file_src>();
   auto file_sink_uptr = rx_graph->get<file_sink>();
   auto json_enc_uptr = tx_graph->get<json_enc>();
-  auto http_container_uptr = graph->get<http_flow_container>();
+  auto http_container_uptr = rx_graph->get<http_flow_container>();
   auto tcp_recver_uptr = graph->get<tcp_recver>();
   auto tcp_sender_uptr = graph->get<tcp_sender>();
 
