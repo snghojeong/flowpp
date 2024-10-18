@@ -1,35 +1,66 @@
+#include <iostream>
+#include <memory>
+#include <string>
+#include <stdexcept>
+
 using namespace flowpp;
 
-using content_type_uptr = unique_ptr<flowpp::network::http::content_type>;
-using json_enc_uptr = unique_ptr<json_encoder>;
-using file_src_uptr = unique_ptr<file_src>;
-using data_uptr = unique_ptr<data<http_msg>>;
+using ContentTypePtr = std::unique_ptr<flowpp::network::http::content_type>;
+using JsonEncoderPtr = std::unique_ptr<json_encoder>;
+using FileSrcPtr = std::unique_ptr<file_src>;
+using DataPtr = std::unique_ptr<data<http_msg>>;
 
-class http_flow_container : public observer, public observable {
+// Class representing the HTTP flow container
+class HttpFlowContainer : public observer, public observable {
 public:
-  explicit flow_container(std::string contents_type) {
-    http_builder[make_unique<content_type_uptr>(contents_type)] | this;
-  }
+    // Constructor initializing the container with content type
+    explicit HttpFlowContainer(const std::string& contentType) {
+        // Using unique_ptr to manage content type resource
+        http_builder[std::make_unique<flowpp::network::http::content_type>(contentType)] | this;
+    }
 
-  data_uptr poll(uint64_t timeout) {
-    return make_unique<data<http_msg>>();
-  }
+    // Poll function returning data pointer
+    DataPtr poll(uint64_t timeout) {
+        // Simulate generating HTTP message data
+        return std::make_unique<data<http_msg>>();
+    }
 };
 
-using http_container_uptr = unique_ptr<http_flow_container>;
+using HttpContainerPtr = std::unique_ptr<HttpFlowContainer>;
 
-int main()
-{
-  auto file_src_uptr = tx_graph->get<file_src>();
-  auto file_sink_uptr = rx_graph->get<file_sink>();
-  auto json_enc_uptr = tx_graph->get<json_enc>();
-  auto http_container_uptr = rx_graph->get<http_flow_container>();
-  auto tcp_recver_uptr = rx_graph->get<tcp_recver>();
-  auto tcp_sender_uptr = graph->get<tcp_sender>();
+// Overload the pipe operator for chaining observables with observers
+observable& operator|(observable& lhs, observer& rhs) {
+    lhs.subscribe(&rhs);
+    return lhs;
+}
 
-  file_src_uptr | json_enc_uptr | http_container_uptr | tcp_sender_uptr;
-  tcp_recver_uptr | http_container_uptr | json_dec_uptr | file_sink_uptr;
+// Overload the pipe operator for chaining with unique_ptrs
+observable& operator|(observable& lhs, ObserverPtr& rhs) {
+    lhs.subscribe(rhs.get());
+    return lhs;
+}
 
-  tx_graph->run(INFINITE, INFINITE);
-  rx_graph->run(INFINITE, INFINITE);
+int main() {
+    try {
+        // Get components from tx and rx graphs using make_unique
+        auto fileSrcPtr = tx_graph->get<FileSrc>();
+        auto fileSinkPtr = rx_graph->get<file_sink>();
+        auto jsonEncPtr = tx_graph->get<JsonEncoder>();
+        auto httpContainerPtr = rx_graph->get<HttpFlowContainer>();
+        auto tcpRecverPtr = rx_graph->get<tcp_recver>();
+        auto tcpSenderPtr = graph->get<tcp_sender>();
+
+        // Chain components using the overloaded pipe operator
+        *fileSrcPtr | *jsonEncPtr | *httpContainerPtr | *tcpSenderPtr;
+        *tcpRecverPtr | *httpContainerPtr | *json_dec_uptr | *fileSinkPtr;
+
+        // Run tx and rx graphs with INFINITE loops
+        tx_graph->run(INFINITE, INFINITE);
+        rx_graph->run(INFINITE, INFINITE);
+
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+
+    return 0;
 }
