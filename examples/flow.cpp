@@ -1,26 +1,44 @@
+#include <iostream>
+#include <memory>
+#include <string>
+#include <stdexcept>
+
 using namespace flowpp;
 
-using port_uptr = std::unique_ptr<ip_port>;
-using graph_uptr = std::unique_ptr<graph>;
-using tcp_recv_uptr = std::unique_ptr<tcp_receiver>;
-using data_uptr = std::unique_ptr<data<json>>;
+using PortPtr = std::unique_ptr<ip_port>;
+using GraphPtr = std::unique_ptr<graph>;
+using TcpReceiverPtr = std::unique_ptr<tcp_receiver>;
+using DataPtr = std::unique_ptr<data<json>>;
 
-void main() {
-  graph_uptr tcp_tx_graph;
-  graph_uptr tcp_rx_graph;
-  auto file_src = tcp_tx_graph.get<json_src>();
-  auto file_writer = tcp_rx_graph.get<json_src>();
-  auto tcp_rx = tcp_rx_graph.get<tcp_receiver>();
-  auto tcp_tx = tcp_tx_graph.get<tcp_sender>();
+int main() {
+    try {
+        // Initialize transmission and reception graphs
+        auto tcpTxGraph = std::make_unique<graph>();
+        auto tcpRxGraph = std::make_unique<graph>();
 
-  // HTTP
-  file_src["JSON"] | json_builder | http_builder | tcp_tx["127.0.0.1"]; 
-  tcp_rx[port(80)] |    http_parser[content_type("application/json")] | json_parser() | file_writer("recv.json");
-  tcp_rx[port(8080)] |  http_parser[content_type("plain/text")] | [] (const std::string& txt) { cout << txt; };
+        // Get components from the graphs
+        auto fileSrc = tcpTxGraph->get<json_src>();
+        auto fileWriter = tcpRxGraph->get<json_src>();
+        auto tcpReceiver = tcpRxGraph->get<tcp_receiver>();
+        auto tcpSender = tcpTxGraph->get<tcp_sender>();
 
-  // FTP
-  tcp_rx[port(22)] | ftp_parser | file_writer("filename");
+        // HTTP Configuration
+        fileSrc["JSON"] | json_builder | http_builder | tcpSender["127.0.0.1"];
+        tcpReceiver[port(80)] | http_parser[content_type("application/json")] | json_parser() | fileWriter("recv.json");
+        tcpReceiver[port(8080)] | http_parser[content_type("plain/text")] | [](const std::string& txt) {
+            std::cout << txt << std::endl;
+        };
 
-  auto result = tcp_rx_graph.run(1000 /* timeout */, INFINITE /* number of loop */);
-  std::cout << result << std::endl;
+        // FTP Configuration
+        tcpReceiver[port(22)] | ftp_parser | fileWriter("filename");
+
+        // Run the receiver graph with a timeout of 1000ms and an infinite loop
+        auto result = tcpRxGraph->run(1000 /* timeout */, INFINITE /* number of loop */);
+        std::cout << "Graph run result: " << result << std::endl;
+
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+
+    return 0;
 }
