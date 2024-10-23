@@ -1,29 +1,40 @@
-using namespace flowpp;
+#ifndef _OBSERVABLE_HPP_
+#define _OBSERVABLE_HPP_
 
-#ifndef _OBSERVERABLE_HPP_
-#define _OBSERVERABLE_HPP_
+#include <map>
+#include <list>
+#include <memory>
+#include <string>
+#include <functional>
+
+using namespace flowpp;
 
 template<typename T>
 class observable {
-  using data_uptr = std::unique_ptr<data<T>>;
-  using obs_uptr = std::unique_ptr<observer>;
-  using obs_map_uptr = std::unique_ptr<std::map<string, obs_uptr>>;
-  using data_list_uptr = std::unique_ptr<std::list<data_uptr>>;
+    using DataPtr = std::unique_ptr<data<T>>;
+    using ObserverPtr = std::unique_ptr<observer>;
+    using ObserverMap = std::map<std::string, ObserverPtr>;
+    using DataList = std::list<DataPtr>;
 
 public:
-  explicit observable() { 
-    _obs_map = make_unique<std::map<string, obs_uptr>>(); 
-    _data_list = make_unique<std::list<data_uptr>(); 
-  }
+    // Constructor initializes observer map and data list
+    explicit observable() 
+        : _obs_map(std::make_unique<ObserverMap>()), 
+          _data_list(std::make_unique<DataList>()) {}
 
-  virtual ~observable() { }
+    // Virtual destructor for proper cleanup
+    virtual ~observable() = default;
 
-  virtual data_uptr poll(uint64_t timeout) = 0;
-  virtual void listen(std::function callback) = 0;
+    // Poll method to be implemented by derived classes
+    virtual DataPtr poll(uint64_t timeout) = 0;
+
+    // Listen method to add a callback function to notify observers
+    virtual void listen(const std::function<void(const DataPtr&)>& callback) = 0;
 
 protected:
-  obs_map_uptr _obs_map;
-  data_list_uptr _data_list;
+    // Protected members for the observer map and data list
+    std::unique_ptr<ObserverMap> _obs_map;
+    std::unique_ptr<DataList> _data_list;
 };
 
-#endif
+#endif // _OBSERVABLE_HPP_
