@@ -38,6 +38,7 @@ public:
 
 // Overload the pipe operator for better readability
 observable& operator|(observable& lhs, observer& rhs) {
+    printf("pipeline");
     lhs.subscribe(&rhs);
     return lhs;
 }
