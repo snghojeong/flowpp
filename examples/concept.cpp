@@ -15,9 +15,10 @@ template<typename T>
 class Printer : public observer {
     using DataPtr = std::unique_ptr<data<T>>;
 public:
-    // Notify function is now generalized for all types
-    virtual void notify(DataPtr dat) override {
-        std::cout << dat->get();
+    void notify(DataPtr dat) override {
+        if (dat) {
+            std::cout << dat->get() << std::endl;
+        }
     }
 };
 
@@ -26,7 +27,6 @@ class KeyScanner : public observable {
 public:
     using DataPtr = std::unique_ptr<data<std::string>>;
 
-    // Generates data from user input
     DataPtr generate() {
         std::string input;
         if (!(std::cin >> input)) {
@@ -36,14 +36,12 @@ public:
     }
 };
 
-// Overload the pipe operator for better readability
+// Overloaded pipe operator for readability
 observable& operator|(observable& lhs, observer& rhs) {
-    printf("pipeline");
     lhs.subscribe(&rhs);
     return lhs;
 }
 
-// Overload the pipe operator for chaining observables with observers
 observable& operator|(observable& lhs, ObserverPtr& rhs) {
     lhs.subscribe(rhs.get());
     return lhs;
@@ -51,23 +49,28 @@ observable& operator|(observable& lhs, ObserverPtr& rhs) {
 
 int main() {
     try {
-        // Instantiate engine and components using make_unique
-        auto enginePtr = std::make_unique<flowpp_engine>();
-        auto scannerPtr = enginePtr->instantiate<KeyScanner>();
-        auto printerPtr = enginePtr->instantiate<Printer<std::string>>();
-        auto counterPtr = enginePtr->instantiate<counter>();
+        // Engine and components initialization
+        auto engine = std::make_unique<flowpp_engine>();
+        auto scanner = engine->instantiate<KeyScanner>();
+        auto printer = engine->instantiate<Printer<std::string>>();
+        auto counter = engine->instantiate<counter>();
 
-        // Piping scanner output to printer and counter
-        *scannerPtr | *printerPtr;
-        *scannerPtr | *counterPtr;
+        // Set up the data flow pipeline
+        *scanner | *printer;
+        *scanner | *counter;
 
-        // Execute engine loop with timeout and loop count
-        enginePtr->run(1000 /* timeout */, 1000 /* loop count */);
+        // Run the engine loop
+        const int timeout = 1000; // in ms
+        const int loop_count = 1000;
+        engine->run(timeout, loop_count);
 
-        // Output final count from counter
-        std::cout << "Key count: " << counterPtr->get() << std::endl;
+        // Output the final count
+        std::cout << "Key count: " << counter->get() << std::endl;
+
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
+    } catch (...) {
+        std::cerr << "Unknown error occurred." << std::endl;
     }
 
     return 0;
