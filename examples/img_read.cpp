@@ -2,7 +2,8 @@ int main() {
     // Set up image source and processor
     auto imageSource = std::make_unique<ImageSource>("image.jpg"); // Provide a JPEG image path
     auto imageProcessor = std::make_unique<ImageProcessor>();
-
+    auto imageSink = std::make_unique<ImageSink>("image_processed.jpg");
+    
     // Subscribe the processor to the source
     imageProcessor->subscribe(std::move(imageSource));
 
