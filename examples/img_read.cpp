@@ -13,5 +13,11 @@ int main() {
         cv::waitKey(0); // Wait for a key press
     });
 
+    imageSink->subscribe(std::move(imageSource));
+    imageSink->listen([](const std::unique_ptr<ImageData>& imgData) {
+        cv::imshow("Image", imgData->get()); // Display the image
+        cv::waitKey(0); // Wait for a key press
+    });
+
     return 0;
 }
