@@ -15,7 +15,7 @@ int main() {
 
     imageSink->subscribe(std::move(imageSource));
     imageSink->listen([](const std::unique_ptr<ImageData>& imgData) {
-        cv::imshow("Image", imgData->get()); // Display the image
+        fwrite(this->filename(), imgData->get());
         cv::waitKey(0); // Wait for a key press
     });
 
