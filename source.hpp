@@ -3,7 +3,7 @@
 
 #include <memory>
 #include <functional>
-#include "observable.hpp"
+#include <observable.hpp>
 
 template <typename T>
 class source : public observable<T> {
