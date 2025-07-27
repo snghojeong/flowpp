@@ -11,6 +11,7 @@ using namespace flowpp;
 using GraphPtr = std::unique_ptr<graph>;
 using YUVSourcePtr = std::unique_ptr<yuv_source>;
 using EncoderPtr = std::unique_ptr<mpeg4_encoder>;
+using DecoderPtr = std::unique_ptr<mpeg4_decoder>;
 using FileWriterPtr = std::unique_ptr<file_writer>;
 using DataPtr = std::unique_ptr<data<std::vector<uint8_t>>>;
 
