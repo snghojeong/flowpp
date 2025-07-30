@@ -57,7 +57,7 @@ int main() {
 
         // Set up the data flow pipeline
         *scanner | *printer;
-        *scanner | *counter;
+        *scanner | *counter | *printer;
 
         // Run the engine loop
         const int timeout = 1000; // in ms
