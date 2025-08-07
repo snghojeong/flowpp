@@ -34,7 +34,7 @@ int main() {
 
         // Run the receiver graph with a timeout of 1000ms and an infinite loop
         auto result = tcpRxGraph->run(1000 /* timeout */, INFINITE /* number of loop */);
-        std::cout << "Graph run result: " << result << std::endl;
+        std::cout << "Result: " << result << std::endl;
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
