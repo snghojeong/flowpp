@@ -20,7 +20,7 @@ public:
     }
 
     // Poll function returning data pointer
-    DataPtr poll(uint64_t timeout) {
+    DataPtr poll(DataPtr dat, uint64_t timeout) {
         // Simulate generating HTTP message data
         return std::make_unique<data<http_msg>>();
     }
