@@ -12,6 +12,7 @@ class data {
 
 public:
     data() = default;
+    data(BsPtr bs);
     virtual ~data() = default;
 
     // Pure virtual methods for derived classes to implement
