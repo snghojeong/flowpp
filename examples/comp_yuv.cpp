@@ -33,7 +33,7 @@ int main() {
         std::cout << "Encoding graph run result: " << result << std::endl;
 
     } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+        std::cerr << "Error: " << e.to_str() << std::endl;
     }
 
     return 0;
