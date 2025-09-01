@@ -15,12 +15,16 @@ int main() {
         // Initialize transmission and reception graphs
         auto tcpTxGraph = std::make_unique<graph>();
         auto tcpRxGraph = std::make_unique<graph>();
+        auto udpTxGraph = std::make_unique<graph>();
+        auto udpRxGraph = std::make_unique<graph>();
 
         // Get components from the graphs
         auto fileSrc = tcpTxGraph->get<json_src>();
         auto fileWriter = tcpRxGraph->get<json_src>();
         auto tcpReceiver = tcpRxGraph->get<tcp_receiver>();
         auto tcpSender = tcpTxGraph->get<tcp_sender>();
+        auto udpReceiver = udpRxGraph->get<udp_receiver>();
+        auto udpSender = udpTxGraph->get<udp_sender>();
 
         // HTTP Configuration
         fileSrc["JSON"] | json_builder | http_builder | tcpSender["127.0.0.1"];
