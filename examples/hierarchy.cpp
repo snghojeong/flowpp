@@ -48,7 +48,7 @@ int main() {
         auto jsonEncPtr = tx_graph->get<JsonEncoder>();
         auto httpContainerPtr = rx_graph->get<HttpFlowContainer>();
         auto tcpRecverPtr = rx_graph->get<tcp_recver>();
-        auto tcpSenderPtr = graph->get<tcp_sender>();
+        auto tcpSenderPtr = tx_graph->get<tcp_sender>();
 
         // Chain components using the overloaded pipe operator
         *fileSrcPtr | *jsonEncPtr | *httpContainerPtr | *tcpSenderPtr;
