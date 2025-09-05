@@ -19,6 +19,7 @@ int main() {
     try {
         // Initialize the graph for encoding YUV to MPEG-4
         auto encodeGraph = std::make_unique<graph>();
+        auto decodeGraph = std::make_unique<graph>();
 
         // Components for the encoding pipeline
         auto yuvSource = encodeGraph->get<yuv_source>("input.yuv", 640, 480); // Source YUV file
