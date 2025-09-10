@@ -1,40 +1,108 @@
-#ifndef _OBSERVABLE_HPP_
-#define _OBSERVABLE_HPP_
+#pragma once
 
-#include <map>
-#include <list>
-#include <memory>
-#include <string>
+#include <cstdint>
 #include <functional>
+#include <memory>
+#include <mutex>
+#include <unordered_map>
+#include <vector>
+#include <string>
+#include <atomic>
 
-using namespace flowpp;
+// Avoid "using namespace" in headers. Forward-declare flowpp types.
+namespace flowpp {
+template <class T> class data;
+class observer;
+}
 
-template<typename T>
+/**
+ * @brief Observable base with:
+ *  - clean header hygiene (no global using, #pragma once)
+ *  - safer pointer semantics (shared_ptr for fan-out)
+ *  - thread-safe subscribe/notify
+ *  - RAII-friendly subscribe()/unsubscribe() with token
+ *  - observer attach/detach by key (non-owning API can be added if desired)
+ *
+ * Derivations implement poll(timeout) and can call notify_all() when new data arrives.
+ */
+template <class T>
 class observable {
-    using DataPtr = std::unique_ptr<data<T>>;
-    using ObserverPtr = std::unique_ptr<observer>;
-    using ObserverMap = std::map<std::string, ObserverPtr>;
-    using DataList = std::list<DataPtr>;
-
 public:
-    // Constructor initializes observer map and data list
-    explicit observable() 
-        : _obs_map(std::make_unique<ObserverMap>()), 
-          _data_list(std::make_unique<DataList>()) {}
+    using Data      = flowpp::data<T>;
+    using DataPtr   = std::shared_ptr<const Data>;         // fan-out friendly
+    using Callback  = std::function<void(DataPtr)>;
+    using Observer  = flowpp::observer;
+    using ObserverPtr = std::shared_ptr<Observer>;
+    using SubscriptionId = std::uint64_t;
 
-    // Virtual destructor for proper cleanup
+    observable() = default;
     virtual ~observable() = default;
 
-    // Poll method to be implemented by derived classes
-    virtual DataPtr poll(uint64_t timeout) = 0;
+    // Implement in derived classes. Return nullptr on timeout if desired.
+    virtual DataPtr poll(std::uint64_t timeout_ms) = 0;
 
-    // Listen method to add a callback function to notify observers
-    virtual void listen(const std::function<void(const DataPtr&)>& callback) = 0;
+    // Functional subscription. Returns a token you can use to unsubscribe.
+    SubscriptionId subscribe(Callback cb) {
+        if (!cb) return 0;
+        std::lock_guard<std::mutex> lock(m_);
+        const auto id = next_id_++;
+        callbacks_.emplace(id, std::move(cb));
+        return id;
+    }
+
+    // Remove a functional subscriber by token.
+    void unsubscribe(SubscriptionId id) {
+        if (id == 0) return;
+        std::lock_guard<std::mutex> lock(m_);
+        callbacks_.erase(id);
+    }
+
+    // Observer object management (keyed).
+    void attach(const std::string& key, ObserverPtr obs) {
+        std::lock_guard<std::mutex> lock(m_);
+        observers_[key] = std::move(obs);
+    }
+
+    void detach(const std::string& key) {
+        std::lock_guard<std::mutex> lock(m_);
+        observers_.erase(key);
+    }
 
 protected:
-    // Protected members for the observer map and data list
-    std::unique_ptr<ObserverMap> _obs_map;
-    std::unique_ptr<DataList> _data_list;
-};
+    // Call from derived classes when you have new data to publish.
+    // Copies subscriber lists under lock, then notifies without holding the lock.
+    void notify_all(DataPtr data) {
+        if (!data) return;
 
-#endif // _OBSERVABLE_HPP_
+        std::vector<Callback> callbacks_copy;
+        std::vector<ObserverPtr> observers_copy;
+
+        {
+            std::lock_guard<std::mutex> lock(m_);
+            callbacks_copy.reserve(callbacks_.size());
+            for (auto& kv : callbacks_) callbacks_copy.push_back(kv.second);
+            observers_copy.reserve(observers_.size());
+            for (auto& kv : observers_) if (kv.second) observers_copy.push_back(kv.second);
+        }
+
+        // Notify function subscribers
+        for (auto& cb : callbacks_copy) {
+            // Protect against user callbacks throwing
+            try { cb(data); } catch (...) { /* swallow or log */ }
+        }
+
+        // Notify object observers
+        for (auto& obs : observers_copy) {
+            try {
+                // Assuming observer has: void notify(std::shared_ptr<const data<T>>)
+                obs->notify(data);
+            } catch (...) { /* swallow or log */ }
+        }
+    }
+
+private:
+    std::unordered_map<std::string, ObserverPtr> observers_;
+    std::unordered_map<SubscriptionId, Callback> callbacks_;
+    std::atomic<SubscriptionId> next_id_{1};
+    std::mutex m_;
+};
