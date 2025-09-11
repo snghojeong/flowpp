@@ -1,60 +1,126 @@
-#ifndef _GRAPH_HPP_
-#define _GRAPH_HPP_
+#pragma once
 
-#include <list>
-#include <memory>
 #include <algorithm>
-#include <cstdint>
 #include <chrono>
+#include <cstdint>
+#include <memory>
+#include <thread>
+#include <vector>
 
-using namespace flowpp;
+// No "using namespace" in headers. Forward-declare only what we need.
+namespace flowpp {
+template <class T> class data;
+template <class T> class observable;
+}
 
+/**
+ * @brief A simple polling graph that runs a set of observables.
+ *
+ * Key improvements:
+ *  - Clean header hygiene and forward declarations
+ *  - Clear separation of *total run duration* vs. *per-observable poll timeout*
+ *  - No magic INFINITE; explicit "unbounded" overloads provided
+ *  - Safer container (vector), null checks, and exception isolation per poll
+ *  - Non-copyable, movable semantics to avoid accidental copies
+ */
 template <typename T>
 class graph {
-    using ObservablePtr = std::unique_ptr<observable<T>>;
-    using DataPtr = std::unique_ptr<data<T>>;
-
 public:
-    // Run method with a timeout and loop count
-    void run(uint64_t timeout, int loop) {
-        const auto start_time = millis();
-        uint64_t curr_time = 0;
-        int cnt = 0;
+    using Observable      = flowpp::observable<T>;
+    using ObservablePtr   = std::unique_ptr<Observable>;
+    using clock           = std::chrono::steady_clock;
+    using ms              = std::chrono::milliseconds;
 
-        while ((loop <= 0) || (cnt++ < loop && start_time + timeout > curr_time)) {
-            // Iterate over the list of observables and poll them
-            std::for_each(_observableList.begin(), _observableList.end(), 
-                [timeout](const ObservablePtr& observable) {
-                    observable->poll(timeout);
-                });
-            curr_time = millis();
+    graph() = default;
+    graph(const graph&) = delete;
+    graph& operator=(const graph&) = delete;
+    graph(graph&&) noexcept = default;
+    graph& operator=(graph&&) noexcept = default;
+    ~graph() = default;
+
+    // Add an observable (ignored if null).
+    void add_observable(ObservablePtr obs) {
+        if (obs) observables_.push_back(std::move(obs));
+    }
+
+    // Poll all observables once with a per-poll timeout.
+    // Returns the number of successfully polled observables.
+    std::size_t run_once(ms poll_timeout) {
+        std::size_t ok = 0;
+        for (const auto& obs : observables_) {
+            if (!obs) continue;
+            try {
+                // poll() may block up to poll_timeout; return value is ignored here.
+                (void)obs->poll(static_cast<std::uint64_t>(poll_timeout.count()));
+                ++ok;
+            } catch (...) {
+                // Swallow or hook up to your logging as needed.
+            }
+        }
+        return ok;
+    }
+
+    // Run for a total wall-clock duration, polling each observable with poll_timeout each loop.
+    // Stops when total_duration elapses.
+    void run_for(ms total_duration, ms poll_timeout) {
+        const auto end = clock::now() + total_duration;
+        while (clock::now() < end) {
+            run_once(poll_timeout);
+            // If poll_timeout is zero, avoid hot-spinning:
+            if (poll_timeout.count() == 0) std::this_thread::yield();
         }
     }
 
-    // Run method with only a timeout
-    void run(uint64_t timeout) {
-        run(timeout, INFINITE);
+    // Run a fixed number of iterations (loops), each loop polling all observables.
+    void run_iterations(std::size_t loops, ms poll_timeout) {
+        for (std::size_t i = 0; i < loops; ++i) {
+            run_once(poll_timeout);
+            if (poll_timeout.count() == 0) std::this_thread::yield();
+        }
     }
 
-    // Default run method with infinite timeout and loop
+    // Unbounded run: keep polling forever (until the process is stopped),
+    // with a per-poll timeout.
+    void run_unbounded(ms poll_timeout) {
+        for (;;) {
+            run_once(poll_timeout);
+            if (poll_timeout.count() == 0) std::this_thread::yield();
+        }
+    }
+
+    // Convenience overloads to mirror your original API intent:
+
+    // Run with a total wall-clock timeout (previously: overall "timeout").
+    // Each observable gets the same per-poll timeout (defaults to 10ms).
+    void run(std::uint64_t total_timeout_ms, std::int64_t loop_count) {
+        // If loop_count <= 0, we ignore iterations and use only total duration.
+        const auto total = ms(total_timeout_ms);
+        const auto per_poll = ms(10); // sensible default; adjust as needed
+        if (loop_count <= 0) {
+            run_for(total, per_poll);
+        } else {
+            // Stop at whichever comes first: loop_count or total_timeout.
+            const auto end = clock::now() + total;
+            for (std::int64_t i = 0; i < loop_count && clock::now() < end; ++i) {
+                run_once(per_poll);
+                if (per_poll.count() == 0) std::this_thread::yield();
+            }
+        }
+    }
+
+    // Run with only a total timeout (kept for compatibility).
+    void run(std::uint64_t total_timeout_ms) {
+        run_for(ms(total_timeout_ms), ms(10));
+    }
+
+    // Default run: unbounded with a small per-poll timeout to prevent hot spin.
     void run() {
-        run(INFINITE, INFINITE);
+        run_unbounded(ms(10));
     }
 
-    // Method to add an observable to the list
-    void add_observable(ObservablePtr obs) {
-        _observableList.push_back(std::move(obs));
-    }
-
-protected:
-    std::list<ObservablePtr> _observableList;
+    // Expose observables count (useful for tests/diagnostics).
+    std::size_t size() const noexcept { return observables_.size(); }
 
 private:
-    // Helper method to get current time in milliseconds
-    uint64_t millis() const {
-        return std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::steady_clock::now().time_since_epoch()).count();
-    }
+    std::vector<ObservablePtr> observables_;
 };
-
-#endif // _GRAPH_HPP_
