@@ -1,107 +1,116 @@
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+#include <type_traits>
+#include <vector>
+#include <chrono>
 
-// Assuming 'flowpp' and its components are available.
-// For example purposes, we'll define minimal versions.
-// In a real-world scenario, these would be provided by the flowpp library.
+// ===== Minimal flowpp-like framework (for example completeness) =====
 namespace flowpp {
-    class data_base {};
-    class source_base {};
-    
+    class data_base {
+    public:
+        virtual ~data_base() = default;
+    };
+
+    class source {
+    public:
+        using duration = std::chrono::milliseconds;
+        virtual ~source() = default;
+        // Return next piece of data if available (here we always produce one).
+        virtual std::unique_ptr<data_base> poll(duration timeout) = 0;
+    };
+
     template <typename T>
     class data : public data_base {
     public:
         explicit data(T val) : _value(val) {}
-        T get_value() const { return _value; }
+        [[nodiscard]] T get_value() const noexcept { return _value; }
     private:
         T _value;
     };
-    
-    class source : public source_base {
-    public:
-        virtual std::unique_ptr<data_base> poll(int64_t timeout) = 0;
-        virtual ~source() = default;
-    };
-    
+
     class graph {
     public:
-        template <typename T>
-        std::shared_ptr<T> get() {
-            // Placeholder for real-world graph functionality.
-            // This would typically retrieve a registered component.
-            // We'll just create a new one for this example.
-            _component = std::make_shared<T>();
-            return std::dynamic_pointer_cast<T>(_component);
+        template <typename T, typename... Args>
+        std::shared_ptr<T> add(Args&&... args) {
+            static_assert(std::is_base_of<source, T>::value,
+                          "T must derive from flowpp::source");
+            auto comp = std::make_shared<T>(std::forward<Args>(args)...);
+            _components.emplace_back(comp);
+            return comp;
         }
-        
-        void run(int64_t timeout, int loops) {
-            if (!_component) {
-                throw std::runtime_error("No component to run.");
+
+        // Run all registered components for 'loops' iterations.
+        // If loops <= 0, throws to avoid accidental infinite loops in examples.
+        void run(source::duration timeout, int loops) {
+            if (_components.empty()) {
+                throw std::runtime_error("graph::run() called with no components.");
             }
-            // For this example, we'll just simulate the polling.
+            if (loops <= 0) {
+                throw std::runtime_error("graph::run() requires loops > 0 in this example.");
+            }
             for (int i = 0; i < loops; ++i) {
-                _component->poll(timeout);
+                for (auto& c : _components) {
+                    (void)c->poll(timeout); // discard in this demo
+                }
             }
         }
-        
+
     private:
-        std::shared_ptr<source_base> _component;
+        std::vector<std::shared_ptr<source>> _components;
     };
-    
-    // Assuming this constant is part of the flowpp library.
-    constexpr int64_t INFINITE = -1;
+
+    // A readable "no timeout" constant using chrono.
+    constexpr source::duration INFINITE = source::duration::max();
     using uint_t = unsigned int;
-}
+} // namespace flowpp
 
 using namespace flowpp;
 
-template <typename T, T Step = 1>
+// ===== A generic counter source =====
+template <typename T, T Step = static_cast<T>(1)>
 class GenericCounter : public source {
+    static_assert(std::is_integral<T>::value, "GenericCounter<T>: T must be an integral type.");
 public:
     using DataPtr = std::unique_ptr<data<T>>;
 
-    GenericCounter() : _cnt(0) {}
+    explicit GenericCounter(T start = static_cast<T>(0)) noexcept : _cnt(start) {}
 
-    DataPtr poll(int64_t /* timeout */) override {
-        T current_count = _cnt;
-        _cnt += Step;
-        return std::make_unique<data<T>>(current_count);
+    std::unique_ptr<data_base> poll(duration /*timeout*/) override {
+        T current = _cnt;
+        _cnt = static_cast<T>(_cnt + Step);
+        return std::make_unique<data<T>>(current);
     }
 
-    T get_count() const {
-        return _cnt;
-    }
+    [[nodiscard]] T get_count() const noexcept { return _cnt; }
 
 private:
-    T _cnt;
+    T _cnt{};
 };
 
 int main() {
     try {
-        // Create unique_ptrs for two graphs
-        auto counter1Graph = std::make_unique<graph>();
-        auto counter2Graph = std::make_unique<graph>();
+        graph counter1Graph;
+        graph counter2Graph;
 
-        // Get counter instances from graphs using the generic template
-        // Note: The graph's get() method would need to instantiate the template.
-        auto counter1 = counter1Graph->get<GenericCounter<uint_t, 1>>();
-        auto counter2 = counter2Graph->get<GenericCounter<int, 2>>();
+        // Register counters
+        auto counter1 = counter1Graph.add<GenericCounter<uint_t, 1>>();   // starts at 0, step 1
+        auto counter2 = counter2Graph.add<GenericCounter<int, 2>>();      // starts at 0, step 2
 
-        // Run the graphs with respective loop counts
+        // Loop counts
         constexpr int counter1Loops = 10;
         constexpr int counter2Loops = 20;
 
-        counter1Graph->run(INFINITE, counter1Loops);
-        counter2Graph->run(INFINITE, counter2Loops);
+        // Run
+        counter1Graph.run(INFINITE, counter1Loops);
+        counter2Graph.run(INFINITE, counter2Loops);
 
-        // Print the final counts
-        std::cout << "Counter1 final count: " << counter1->get_count() << std::endl; // Should print 10
-        std::cout << "Counter2 final count: " << counter2->get_count() << std::endl; // Should print 40
+        // Print final counts (should be 10 and 40)
+        std::cout << "Counter1 final count: " << counter1->get_count() << '\n';
+        std::cout << "Counter2 final count: " << counter2->get_count() << '\n';
     } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+        std::cerr << "Error: " << e.what() << '\n';
         return 1;
     }
-
     return 0;
 }
