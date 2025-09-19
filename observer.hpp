@@ -1,5 +1,4 @@
-#ifndef _OBSERVER_HPP_
-#define _OBSERVER_HPP_
+#pragma once
 
 #include <memory>
 #include <functional>
@@ -18,5 +17,3 @@ public:
     // Pure virtual method to listen with a callback function
     virtual void listen(const std::function<void(const std::unique_ptr<data<T>>& data)>& callback) = 0;
 };
-
-#endif // _OBSERVER_HPP_
