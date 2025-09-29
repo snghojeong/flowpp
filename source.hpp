@@ -1,5 +1,4 @@
-#ifndef _SOURCE_HPP_
-#define _SOURCE_HPP_
+#pragma once
 
 #include <memory>
 #include <functional>
@@ -20,5 +19,3 @@ public:
     // Pure virtual function for setting up a listener
     virtual void listen(const std::function<void(const data_uptr&)>& callback) override = 0;
 };
-
-#endif // _SOURCE_HPP_
