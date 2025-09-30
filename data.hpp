@@ -1,5 +1,4 @@
-#ifndef _DATA_HPP_
-#define _DATA_HPP_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -27,5 +26,3 @@ public:
     virtual BsPtr serialize() const = 0;
     virtual void deserialize(const BsPtr& bs) = 0;
 };
-
-#endif // _DATA_HPP_
