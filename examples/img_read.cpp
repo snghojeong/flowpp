@@ -7,11 +7,11 @@
 
 class ImageSource {
 public:
-    explicit ImageSource(std::string path) : path_(std::move(path)) {}
+    explicit ImageSource(std::string path) : _path(std::move(path)) {}
     void set_callback(std::function<void(cv::Mat&&)> cb) { on_image_ = std::move(cb); }
 
     bool run_once() {
-        cv::Mat img = cv::imread(path_, cv::IMREAD_COLOR);
+        cv::Mat img = cv::imread(_path, cv::IMREAD_COLOR);
         if (img.empty()) {
             std::cerr << "[ImageSource] Failed to load: " << path_ << "\n";
             return false;
@@ -21,7 +21,7 @@ public:
     }
 
 private:
-    std::string path_;
+    std::string _path;
     std::function<void(cv::Mat&&)> on_image_;
 };
 
