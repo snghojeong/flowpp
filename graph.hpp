@@ -29,7 +29,7 @@ public:
     using Observable      = flowpp::observable<T>;
     using ObservablePtr   = std::unique_ptr<Observable>;
     using clock           = std::chrono::steady_clock;
-    using ms              = std::chrono::milliseconds;
+    using millis          = std::chrono::milliseconds;
 
     graph() = default;
     graph(const graph&) = delete;
@@ -81,7 +81,7 @@ public:
 
     // Unbounded run: keep polling forever (until the process is stopped),
     // with a per-poll timeout.
-    void run_unbounded(ms poll_timeout) {
+    void run_unbounded(millis poll_timeout) {
         for (;;) {
             run_once(poll_timeout);
             if (poll_timeout.count() == 0) std::this_thread::yield();
@@ -94,8 +94,8 @@ public:
     // Each observable gets the same per-poll timeout (defaults to 10ms).
     void run(std::uint64_t total_timeout_ms, std::int64_t loop_count) {
         // If loop_count <= 0, we ignore iterations and use only total duration.
-        const auto total = ms(total_timeout_ms);
-        const auto per_poll = ms(10); // sensible default; adjust as needed
+        const auto total = millis(total_timeout_ms);
+        const auto per_poll = millis(10); // sensible default; adjust as needed
         if (loop_count <= 0) {
             run_for(total, per_poll);
         } else {
@@ -110,12 +110,12 @@ public:
 
     // Run with only a total timeout (kept for compatibility).
     void run(std::uint64_t total_timeout_ms) {
-        run_for(ms(total_timeout_ms), ms(10));
+        run_for(millis(total_timeout_ms), millis(10));
     }
 
     // Default run: unbounded with a small per-poll timeout to prevent hot spin.
     void run() {
-        run_unbounded(ms(10));
+        run_unbounded(millis(10));
     }
 
     // Expose observables count (useful for tests/diagnostics).
