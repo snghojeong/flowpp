@@ -10,10 +10,7 @@
 #include <atomic>
 
 // Avoid "using namespace" in headers. Forward-declare flowpp types.
-namespace flowpp {
-template <class T> class data;
-class observer;
-}
+using namespace flowpp;
 
 /**
  * @brief Observable base with:
