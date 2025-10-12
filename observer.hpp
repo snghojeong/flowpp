@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <functional>
-#include "observable.hpp"  // Ensure this header is included for observable<T>
+#include "observable.hpp"
 
 template <typename T>
 class observer {
