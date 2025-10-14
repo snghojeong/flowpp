@@ -19,6 +19,7 @@ public:
     virtual T get() const = 0;
     virtual size_t size() const = 0;
     virtual std::unique_ptr<data<T>> clone() const = 0;
+    virtual std::unique_ptr<data<T>> move() = 0;
     
     // Methods for parsing and serialization
     virtual void parse(const StrPtr& str) = 0;
