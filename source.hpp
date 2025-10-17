@@ -18,4 +18,6 @@ public:
 
     // Pure virtual function for setting up a listener
     virtual void listen(const std::function<void(const data_uptr&)>& callback) override = 0;
+
+    virtual void flush() = 0;
 };
