@@ -27,7 +27,7 @@ int main() {
         auto fileWriter = encodeGraph->get<file_writer>("output.mp4");         // Output MPEG-4 file writer
 
         // Pipeline configuration
-        yuvSource["YUV"] | encoder | fileWriter;
+        yuvSource | encoder | fileWriter;
 
         // Run the encoding graph with a timeout of 5000 ms and 30 loops
         auto result = encodeGraph->run(5000 /* timeout */, 30 /* frames */);
