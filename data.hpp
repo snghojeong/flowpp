@@ -11,6 +11,7 @@ class data {
 
 public:
     data() = default;
+    data(const T& value);
     data(BsPtr bs);
     virtual ~data() = default;
 
