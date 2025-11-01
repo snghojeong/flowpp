@@ -59,7 +59,7 @@ int main() {
         rx_graph->run(INFINITE, INFINITE);
 
     } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+        std::cout << "Error: " << e.what() << std::endl;
     }
 
     return 0;
