@@ -82,6 +82,6 @@ int main() {
         return 0;
     } catch (const std::exception& e) {
         std::cerr << "Unhandled exception: " << e.what() << "\n";
-        return 2;
+        return -1;
     }
 }
