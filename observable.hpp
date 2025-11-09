@@ -93,7 +93,7 @@ protected:
             try {
                 // Assuming observer has: void notify(std::shared_ptr<const data<T>>)
                 obs->notify(data);
-            } catch (...) { /* swallow or log */ }
+            } catch (...) { std::cerr << "Exception" << std::endl; }
         }
     }
 
