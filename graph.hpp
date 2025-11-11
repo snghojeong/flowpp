@@ -118,7 +118,6 @@ public:
         run_unbounded(millis(10));
     }
 
-    // Expose observables count (useful for tests/diagnostics).
     std::size_t size() const noexcept { return observables_.size(); }
 
 private:
