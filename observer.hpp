@@ -10,8 +10,6 @@ class observer {
 
 public:
     virtual ~observer() = default;
-
-    // Pure virtual method to subscribe to an observable
     virtual void subscribe(ObservablePtr observable) = 0;
 
     // Pure virtual method to listen with a callback function
