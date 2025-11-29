@@ -7,7 +7,6 @@
 #include <thread>
 #include <vector>
 
-// No "using namespace" in headers. Forward-declare only what we need.
 namespace flowpp {
 template <class T> class data;
 template <class T> class observable;
