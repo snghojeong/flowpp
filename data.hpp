@@ -15,7 +15,6 @@ public:
     data(BsPtr bs);
     virtual ~data() = default;
 
-    // Pure virtual methods for derived classes to implement
     virtual void set(const T& value) = 0;
     virtual T get() const = 0;
     virtual size_t size() const = 0;
