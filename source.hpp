@@ -9,7 +9,6 @@ class source : public observable<T> {
     using data_uptr = std::unique_ptr<data<T>>;
 
 public:
-    // Constructor and destructor
     explicit source() = default;
     virtual ~source() = default;
 
