@@ -26,10 +26,10 @@ template <class T>
 class observable {
 public:
     using Data      = flowpp::data<T>;
-    using DataPtr   = std::shared_ptr<const Data>;         // fan-out friendly
+    using DataPtr   = std::unique_ptr<const Data>;         // fan-out friendly
     using Callback  = std::function<void(DataPtr)>;
     using Observer  = flowpp::observer;
-    using ObserverPtr = std::shared_ptr<Observer>;
+    using ObserverPtr = std::unique_ptr<Observer>;
     using SubscriptionId = std::uint64_t;
 
     observable() = default;
