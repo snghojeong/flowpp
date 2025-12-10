@@ -87,8 +87,6 @@ public:
         }
     }
 
-    // Convenience overloads to mirror your original API intent:
-
     // Run with a total wall-clock timeout (previously: overall "timeout").
     // Each observable gets the same per-poll timeout (defaults to 10ms).
     void run(std::uint64_t total_timeout_ms, std::int64_t loop_count) {
