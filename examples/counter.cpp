@@ -16,7 +16,6 @@ namespace flowpp {
     public:
         using duration = std::chrono::milliseconds;
         virtual ~source() = default;
-        // Return next piece of data if available (here we always produce one).
         virtual std::unique_ptr<data_base> poll(duration timeout) = 0;
     };
 
