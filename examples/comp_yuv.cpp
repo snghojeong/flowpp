@@ -7,7 +7,6 @@
 
 using namespace flowpp;
 
-// Type definitions for flowpp components
 using GraphPtr = std::unique_ptr<graph>;
 using YUVSourcePtr = std::unique_ptr<yuv_source>;
 using EncoderPtr = std::unique_ptr<mpeg4_encoder>;
