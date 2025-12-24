@@ -73,8 +73,7 @@ int main() {
         ImageSource source{"image_src.jpg"};
         ImageProcessor processor;
         ImageSink sink{"image_processed.jpg"};
-
-        // Wire: source → processor → sink
+        
         processor.set_callback([&sink](cv::Mat&& m) { sink.on_image(std::move(m)); });
         source.set_callback([&processor](cv::Mat&& m) { processor.on_image(std::move(m)); });
 
