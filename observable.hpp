@@ -91,7 +91,6 @@ protected:
         // Notify object observers
         for (auto& obs : observers_copy) {
             try {
-                // Assuming observer has: void notify(std::shared_ptr<const data<T>>)
                 obs->notify(data);
             } catch (...) { std::cerr << "Exception" << std::endl; }
         }
