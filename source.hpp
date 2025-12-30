@@ -15,7 +15,6 @@ public:
     // Pure virtual function for polling data
     virtual data_uptr poll(uint64_t timeout) override = 0;
 
-    // Pure virtual function for setting up a listener
     virtual void listen(const std::function<void(const data_uptr&)>& callback) override = 0;
 
     virtual void flush() = 0;
