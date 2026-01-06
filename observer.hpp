@@ -6,7 +6,7 @@
 
 template <typename T>
 class observer {
-    using ObservablePtr = std::unique_ptr<observable<T>>;
+    using ObservablePtr = std::shared_ptr<observable<T>>;
 
 public:
     virtual ~observer() = default;
