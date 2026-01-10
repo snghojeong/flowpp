@@ -9,7 +9,6 @@
 #include <string>
 #include <atomic>
 
-// Avoid "using namespace" in headers. Forward-declare flowpp types.
 using namespace flowpp;
 
 /**
