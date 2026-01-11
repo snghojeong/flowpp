@@ -10,7 +10,6 @@ using JsonEncoderPtr = std::unique_ptr<json_encoder>;
 using FileSrcPtr = std::unique_ptr<file_src>;
 using DataPtr = std::unique_ptr<data<http_msg>>;
 
-// Class representing the HTTP flow container
 class HttpFlowContainer : public observer, public observable {
 public:
     // Constructor initializing the container with content type
