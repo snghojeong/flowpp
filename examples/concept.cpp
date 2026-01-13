@@ -2,8 +2,8 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include <ios>      // std::ios_base::iostate
-#include <utility>  // std::move
+#include <ios>
+#include <utility>
 
 // Assumptions:
 //   - flowpp provides: flowpp::observable, flowpp::observer,
