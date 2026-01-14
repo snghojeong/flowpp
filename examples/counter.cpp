@@ -5,7 +5,6 @@
 #include <vector>
 #include <chrono>
 
-// ===== Minimal flowpp-like framework (for example completeness) =====
 namespace flowpp {
     class data_base {
     public:
