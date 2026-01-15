@@ -15,12 +15,6 @@ template <class T> class observable;
 /**
  * @brief A simple polling graph that runs a set of observables.
  *
- * Key improvements:
- *  - Clean header hygiene and forward declarations
- *  - Clear separation of total run duration vs. per-observable poll timeout
- *  - No magic INFINITE; explicit "unbounded" overloads provided
- *  - Safer container (vector), null checks, and exception isolation per poll
- *  - Non-copyable, movable semantics to avoid accidental copies
  */
 template <typename T>
 class graph {
