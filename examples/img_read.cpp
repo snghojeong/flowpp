@@ -1,4 +1,3 @@
-// g++ -std=c++17 main.cpp `pkg-config --cflags --libs opencv4`
 #include <opencv2/opencv.hpp>
 #include <functional>
 #include <iostream>
