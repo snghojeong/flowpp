@@ -9,6 +9,7 @@ class observer {
     using ObservablePtr = std::shared_ptr<observable<T>>;
 
 public:
+    explicit observer() { };
     virtual ~observer() = default;
     virtual void subscribe(ObservablePtr observable) = 0;
     virtual void listen(const std::function<void(const std::unique_ptr<data<T>>& data)>& callback) = 0;
