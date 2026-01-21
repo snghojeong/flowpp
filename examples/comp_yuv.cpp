@@ -21,8 +21,8 @@ int main() {
         auto decodeGraph = std::make_unique<graph>();
 
         // Components for the encoding pipeline
-        auto yuvSource = encodeGraph->get<yuv_source>("input.yuv", 640, 480); // Source YUV file
-        auto encoder = encodeGraph->get<mpeg4_encoder>(640, 480, 30);          // Encoder configuration
+        auto yuvSource = encodeGraph->get<yuv_source>("input.yuv", 640, 360); // Source YUV file
+        auto encoder = encodeGraph->get<mpeg4_encoder>(640, 360, 30);          // Encoder configuration
         auto fileWriter = encodeGraph->get<file_writer>("output.mp4");         // Output MPEG-4 file writer
 
         // Pipeline configuration
