@@ -7,7 +7,7 @@
 template <typename T>
 class data {
     using StrPtr = std::unique_ptr<std::string>;
-    using BsPtr = std::unique_ptr<std::bitset<8>>; // Assuming 8-bit streams for the example
+    using BsPtr = std::unique_ptr<std::bitset<8>>;
 
 public:
     data() = default;
