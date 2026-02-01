@@ -25,7 +25,7 @@ template <class T>
 class observable {
 public:
     using Data      = flowpp::data<T>;
-    using DataPtr   = std::unique_ptr<const Data>;         // fan-out friendly
+    using DataPtr   = std::unique_ptr<const Data>;
     using Callback  = std::function<void(DataPtr)>;
     using Observer  = flowpp::observer;
     using ObserverPtr = std::unique_ptr<Observer>;
