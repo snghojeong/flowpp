@@ -26,7 +26,7 @@ int main() {
 
         fileSrc["mime/JSON"] | json_builder | http_builder | tcpSender["127.0.0.1"];
         tcpReceiver[port(80)] | http_parser[content_type("application/json")] | json_parser() | fileWriter("recv.json");
-        tcpReceiver[port(8080)] | http_parser[content_type("plain/text")] | [](const std::string& txt) {
+        tcpReceiver[port(8000)] | http_parser[content_type("plain/text")] | [](const std::string& txt) {
             std::cout << txt << std::endl;
         };
 
