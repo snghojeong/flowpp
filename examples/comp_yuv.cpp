@@ -1,39 +1,33 @@
 #include <iostream>
 #include <memory>
-#include <string>
-#include <stdexcept>
-#include <vector>
-#include <functional>
+#include <flowpp/flowpp.hpp> // Assuming standard header naming
 
 using namespace flowpp;
 
-using GraphPtr = std::unique_ptr<graph>;
-using YUVSourcePtr = std::unique_ptr<yuv_source>;
-using EncoderPtr = std::unique_ptr<mpeg4_encoder>;
-using DecoderPtr = std::unique_ptr<mpeg4_decoder>;
-using FileWriterPtr = std::unique_ptr<file_writer>;
-using DataPtr = std::unique_ptr<data<std::vector<uint8_t>>>;
-
 int main() {
     try {
-        // Initialize the graph for encoding YUV to MPEG-4
-        auto encodeGraph = std::make_unique<graph>();
-        auto decodeGraph = std::make_unique<graph>();
+        // 1. Initialize the processing graph
+        auto pipeline = std::make_unique<graph>();
 
-        // Components for the encoding pipeline
-        auto yuvSource = encodeGraph->get<yuv_source>("input.yuv", 640, 360); // Source YUV file
-        auto encoder = encodeGraph->get<mpeg4_encoder>(640, 360, 30);          // Encoder configuration
-        auto fileWriter = encodeGraph->get<file_writer>("output.mp4");         // Output MPEG-4 file writer
+        // 2. Define components directly within the graph context
+        // Using descriptive names for clarity
+        auto source  = pipeline->get<yuv_source>("input.yuv", 640, 360);
+        auto encoder = pipeline->get<mpeg4_encoder>(640, 360, 30);
+        auto writer  = pipeline->get<file_writer>("output.mp4");
 
-        // Pipeline configuration
-        yuvSource | encoder | fileWriter;
+        // 3. Link components using the pipe operator
+        source | encoder | writer;
 
-        // Run the encoding graph with a timeout of 5000 ms and 30 loops
-        auto result = encodeGraph->run(5000 /* timeout */, 30 /* frames */);
-        std::cout << "Encoding graph run result: " << result << std::endl;
+        // 4. Execute the pipeline
+        // Parameters: timeout (ms), frame count
+        const int result = pipeline->run(5000, 30);
+        
+        std::cout << "Pipeline execution finished with status: " << result << std::endl;
 
     } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.to_str() << std::endl;
+        // Note: Standard exceptions use .what(), not .to_str()
+        std::cerr << "Runtime Error: " << e.what() << std::endl;
+        return 1;
     }
 
     return 0;
