@@ -26,7 +26,6 @@ private:
 
 class ImageProcessor {
 public:
-    // Downstream callback
     void set_callback(std::function<void(cv::Mat&&)> cb) { downstream_ = std::move(cb); }
 
     // Upstream entry point
