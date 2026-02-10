@@ -12,10 +12,6 @@ template <class T> class data;
 template <class T> class observable;
 }
 
-/**
- * @brief A simple polling graph that runs a set of observables.
- *
- */
 template <typename T>
 class graph {
 public:
