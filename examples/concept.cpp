@@ -2,92 +2,90 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include <ios>
 #include <utility>
-
-// Assumptions:
-//   - flowpp provides: flowpp::observable, flowpp::observer,
-//     flowpp::data<T>, flowpp::flowpp_engine, flowpp::counter.
-//   - engine.instantiate<T>() returns std::unique_ptr<T>.
 
 namespace fp = flowpp;
 
-// -----------------------------
-// Observers / Sources
-// -----------------------------
+// --- Components ---
 
-// Prints incoming data<T> to stdout.
+/**
+ * Simplified Printer: Focuses only on the core action.
+ * Using template specialization or auto (C++20) can make this more flexible.
+ */
 template <typename T>
 class Printer final : public fp::observer {
 public:
-    using DataPtr = std::unique_ptr<fp::data<T>>;
-
-    void notify(DataPtr dat) override {
-        if (!dat) return;            // ignore EOS or null events
-        std::cout << "Printed: " << dat->get() << '\n';
+    void notify(std::unique_ptr<fp::data<T>> data) override {
+        if (data) {
+            std::cout << "[Output] " << data->get() << std::endl;
+        }
     }
 };
 
-// Reads whitespace-delimited tokens from stdin and emits them as data<std::string>.
+/**
+ * KeyScanner: Streamlines the cin extraction logic.
+ */
 class KeyScanner final : public fp::observable {
 public:
-    using DataPtr = std::unique_ptr<fp::data<std::string>>;
-
-    [[nodiscard]] DataPtr generate() {
+    auto generate() -> std::unique_ptr<fp::data<std::string>> {
         std::string token;
+        
         if (std::cin >> token) {
             return std::make_unique<fp::data<std::string>>(std::move(token));
         }
 
-        // At this point extraction failed.
-        if (std::cin.eof()) {
-            return nullptr; // Clean EOF => graceful end-of-stream
+        if (std::cin.bad()) {
+            throw std::runtime_error("KeyScanner: Unrecoverable stream error");
         }
 
-        // Fail without EOF => real error.
-        throw std::runtime_error("KeyScanner: input stream error (not EOF)");
+        return nullptr; // Clean EOF
     }
 };
 
-// -----------------------------
-// Wiring helper
-// -----------------------------
+// --- Pipeline Helper ---
 
-// Intention-revealing connector instead of overloading operators globally.
-inline void connect(fp::observable& src, fp::observer& dst) {
-    src.subscribe(&dst);
+/**
+ * Connects multiple components in a chain: connect(a, b, c) -> a->b->c
+ */
+template <typename Src, typename... Dsts>
+void connect_chain(Src& source, Dsts&... destinations) {
+    fp::observable* current = &source;
+    auto link = [&](auto* next) {
+        current->subscribe(next);
+        if constexpr (std::is_base_of_v<fp::observable, std::decay_t<decltype(*next)>>) {
+            current = next;
+        }
+    };
+    (link(&destinations), ...);
 }
 
-// -----------------------------
-// Main
-// -----------------------------
+// --- Main ---
+
 int main() {
-    // (Optional) Better interactive performance.
-    std::ios::sync_with_stdio(false);
+    // Optimize I/O
+    std::ios_base::sync_with_stdio(false);
     std::cin.tie(nullptr);
 
     try {
-        constexpr int kTickMs   = 1'000; // engine tick timeout (ms)
-        constexpr int kMaxTicks = 1'000; // engine loop iterations
-
         fp::flowpp_engine engine;
 
+        // Instantiate components
         auto scanner = engine.instantiate<KeyScanner>();
-        auto counter = engine.instantiate<fp::counter>(); // counter is observer+observable
+        auto counter = engine.instantiate<fp::counter>(); 
         auto printer = engine.instantiate<Printer<std::string>>();
 
-        // Pipeline: stdin -> counter -> printer
-        connect(*scanner, *counter);
-        connect(*counter, *printer);
+        // Descriptive wiring: Scanner -> Counter -> Printer
+        connect_chain(*scanner, *counter, *printer);
 
-        engine.run(kTickMs, kMaxTicks);
+        // Run engine
+        engine.run(1000, 1000);
 
-        std::cout << "\n--- Final Results ---\n";
-        std::cout << "Key count: " << counter->get() << '\n';
-        return 0;
+        std::cout << "\n--- Stats ---\n"
+                  << "Total Tokens: " << counter->get() << std::endl;
 
     } catch (const std::exception& e) {
-        std::cerr << "Fatal: " << e.what() << '\n';
+        std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
+    return 0;
 }
