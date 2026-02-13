@@ -6,11 +6,14 @@
 
 template <typename T>
 class observer {
-    using ObservablePtr = std::shared_ptr<observable<T>>;
-
 public:
-    explicit observer() { };
+    // Simplifies long function signatures
+    using ObservablePtr = std::shared_ptr<observable<T>>;
+    using DataCallback = std::function<void(const data<T>&)>;
+
     virtual ~observer() = default;
-    virtual void subscribe(ObservablePtr observable) = 0;
-    virtual void listen(const std::function<void(const std::unique_ptr<data<T>>& data)>& callback) = 0;
+
+    // Pure virtual interface
+    virtual void subscribe(ObservablePtr subject) = 0;
+    virtual void listen(DataCallback callback) = 0;
 };
