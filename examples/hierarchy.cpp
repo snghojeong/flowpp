@@ -12,7 +12,6 @@ using DataPtr = std::unique_ptr<data<http_msg>>;
 
 class HttpFlowContainer : public observer, public observable {
 public:
-    // Constructor initializing the container with content type
     explicit HttpFlowContainer(const std::string& contentType) {
         // Using unique_ptr to manage content type resource
         http_builder[std::make_unique<flowpp::network::http::content_type>(contentType)] | this;
