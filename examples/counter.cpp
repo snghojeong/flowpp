@@ -7,7 +7,6 @@
 
 namespace flowpp {
 
-// Using a virtual base for polymorphic data handling
 class data_base {
 public:
     virtual ~data_base() = default;
