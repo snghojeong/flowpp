@@ -86,8 +86,7 @@ protected:
             // Protect against user callbacks throwing
             try { cb(data); } catch (...) { /* swallow or log */ }
         }
-
-        // Notify object observers
+        
         for (auto& obs : observers_copy) {
             try {
                 obs->notify(data);
