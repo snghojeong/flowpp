@@ -27,7 +27,6 @@ public:
     graph& operator=(graph&&) noexcept = default;
     ~graph() = default;
 
-    // Add an observable (ignored if null).
     void add_observable(ObservablePtr obs) {
         if (obs) observables_.push_back(std::move(obs));
     }
