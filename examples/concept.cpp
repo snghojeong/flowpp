@@ -6,8 +6,6 @@
 
 namespace fp = flowpp;
 
-// --- Components ---
-
 /**
  * Simplified Printer: Focuses only on the core action.
  * Using template specialization or auto (C++20) can make this more flexible.
