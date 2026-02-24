@@ -1,88 +1,73 @@
 #include <iostream>
 #include <memory>
-#include <stdexcept>
 #include <string>
-#include <utility>
+#include <stdexcept>
 
 namespace fp = flowpp;
 
 /**
- * Simplified Printer: Focuses only on the core action.
- * Using template specialization or auto (C++20) can make this more flexible.
+ * Generic Printer: Uses std::string by default for simplicity.
  */
-template <typename T>
+template <typename T = std::string>
 class Printer final : public fp::observer {
 public:
     void notify(std::unique_ptr<fp::data<T>> data) override {
         if (data) {
-            std::cout << "[Output] " << data->get() << std::endl;
+            std::cout << "[Output] " << data->get() << "\n";
         }
     }
 };
 
 /**
- * KeyScanner: Streamlines the cin extraction logic.
+ * KeyScanner: Encapsulates token extraction.
  */
 class KeyScanner final : public fp::observable {
 public:
     auto generate() -> std::unique_ptr<fp::data<std::string>> {
         std::string token;
-        
-        if (std::cin >> token) {
-            return std::make_unique<fp::data<std::string>>(std::move(token));
+        if (!(std::cin >> token)) {
+            if (std::cin.bad()) throw std::runtime_error("I/O failure");
+            return nullptr; 
         }
-
-        if (std::cin.bad()) {
-            throw std::runtime_error("KeyScanner: Unrecoverable stream error");
-        }
-
-        return nullptr; // Clean EOF
+        return std::make_unique<fp::data<std::string>>(std::move(token));
     }
 };
 
-// --- Pipeline Helper ---
-
 /**
- * Connects multiple components in a chain: connect(a, b, c) -> a->b->c
+ * Pipeline Operator: Overloading the pipe operator (|) 
+ * provides a much more readable "Flow" syntax.
  */
-template <typename Src, typename... Dsts>
-void connect_chain(Src& source, Dsts&... destinations) {
-    fp::observable* current = &source;
-    auto link = [&](auto* next) {
-        current->subscribe(next);
-        if constexpr (std::is_base_of_v<fp::observable, std::decay_t<decltype(*next)>>) {
-            current = next;
-        }
-    };
-    (link(&destinations), ...);
+template <typename Src, typename Dst>
+auto& operator|(Src& source, Dst& destination) {
+    source.subscribe(&destination);
+    return destination;
 }
 
-// --- Main ---
-
 int main() {
-    // Optimize I/O
+    // Fast I/O
     std::ios_base::sync_with_stdio(false);
     std::cin.tie(nullptr);
 
     try {
         fp::flowpp_engine engine;
 
-        // Instantiate components
-        auto scanner = engine.instantiate<KeyScanner>();
-        auto counter = engine.instantiate<fp::counter>(); 
-        auto printer = engine.instantiate<Printer<std::string>>();
+        // 1. Instantiate
+        auto& scanner = *engine.instantiate<KeyScanner>();
+        auto& counter = *engine.instantiate<fp::counter>(); 
+        auto& printer = *engine.instantiate<Printer<>>();
 
-        // Descriptive wiring: Scanner -> Counter -> Printer
-        connect_chain(*scanner, *counter, *printer);
+        // 2. Wire the pipeline using the pipe operator
+        // Visual flow: Scanner -> Counter -> Printer
+        scanner | counter | printer;
 
-        // Run engine
+        // 3. Execute
         engine.run(1000, 1000);
 
-        std::cout << "\n--- Stats ---\n"
-                  << "Total Tokens: " << counter->get() << std::endl;
+        std::cout << "\n--- Statistics ---\n"
+                  << "Total Tokens: " << counter.get() << "\n";
 
     } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+        std::cerr << "Fatal Error: " << e.what() << std::endl;
         return 1;
     }
     return 0;
