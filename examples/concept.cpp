@@ -5,21 +5,23 @@
 
 namespace fp = flowpp;
 
-// Explicit, readable wiring helper
-template <class Src, class Dst>
-void connect(Src& src, Dst& dst) {
+namespace app {
+
+// One obvious way to connect nodes.
+inline void connect(fp::observable& src, fp::observer& dst) {
     src.subscribe(&dst);
 }
 
-// Prints incoming strings
+// Prints the received string payload.
 class Printer final : public fp::observer {
 public:
-    void notify(std::unique_ptr<fp::data<std::string>> data) override {
-        if (data) std::cout << "[Output] " << data->get() << '\n';
+    void notify(std::unique_ptr<fp::data<std::string>> msg) override {
+        if (!msg) return;
+        std::cout << "[Output] " << msg->get() << '\n';
     }
 };
 
-// Reads whitespace-delimited tokens from stdin
+// Produces tokens from stdin until EOF.
 class KeyScanner final : public fp::observable {
 public:
     std::unique_ptr<fp::data<std::string>> generate() {
@@ -27,31 +29,47 @@ public:
         if (std::cin >> token) {
             return std::make_unique<fp::data<std::string>>(std::move(token));
         }
+
+        // If extraction failed because of a real I/O error, report it.
         if (std::cin.bad()) {
-            throw std::runtime_error("Critical I/O failure");
+            throw std::runtime_error("stdin I/O error");
         }
-        return nullptr; // EOF or non-fatal failure ends the stream
+
+        // Otherwise: EOF or recoverable state => signal end-of-stream.
+        return nullptr;
     }
 };
 
-int main() {
+void configure_fast_io() {
     std::ios::sync_with_stdio(false);
     std::cin.tie(nullptr);
+}
+
+} // namespace app
+
+int main() {
+    app::configure_fast_io();
 
     try {
         fp::flowpp_engine engine;
 
-        auto& scanner = *engine.instantiate<KeyScanner>();
+        // Construct nodes.
+        auto& scanner = *engine.instantiate<app::KeyScanner>();
         auto& counter = *engine.instantiate<fp::counter>();
-        auto& printer = *engine.instantiate<Printer>();
+        auto& printer = *engine.instantiate<app::Printer>();
 
-        connect(scanner, counter);
-        connect(counter, printer);
+        // Wire pipeline.
+        app::connect(scanner, counter);
+        app::connect(counter, printer);
 
+        // Run.
         engine.run();
 
+        // Report.
         std::cout << "\n--- Execution Summary ---\n"
                   << "Processed Tokens: " << counter.get() << '\n';
+
+        return 0;
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << '\n';
         return 1;
