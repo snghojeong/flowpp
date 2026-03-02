@@ -5,32 +5,28 @@
 
 namespace fp = flowpp;
 
-class Printer final : public fp::observer {
-public:
-    void notify(std::unique_ptr<fp::data<std::string>> data) override {
-        if (data) std::cout << "[Output] " << data->get() << '\n';
-    }
-};
-
-class KeyScanner final : public fp::observable {
-public:
-    std::unique_ptr<fp::data<std::string>> generate() {
-        std::string token;
-        if (std::cin >> token)
-            return std::make_unique<fp::data<std::string>>(std::move(token));
-
-        if (std::cin.bad())
-            throw std::runtime_error("stdin I/O error");
-
-        return nullptr; // EOF / stop
-    }
-};
-
 int main() {
     std::ios::sync_with_stdio(false);
     std::cin.tie(nullptr);
 
     try {
+        using Msg = fp::data<std::string>;
+
+        struct Printer final : fp::observer {
+            void notify(std::unique_ptr<Msg> data) override {
+                if (data) std::cout << "[Output] " << data->get() << '\n';
+            }
+        };
+
+        struct KeyScanner final : fp::observable {
+            std::unique_ptr<Msg> generate() {
+                std::string token;
+                if (std::cin >> token) return std::make_unique<Msg>(std::move(token));
+                if (std::cin.bad()) throw std::runtime_error("stdin I/O error");
+                return nullptr;
+            }
+        };
+
         fp::flowpp_engine engine;
 
         auto& scanner = *engine.instantiate<KeyScanner>();
@@ -42,8 +38,8 @@ int main() {
 
         engine.run();
 
-        std::cout << "\n--- Execution Summary ---\n"
-                  << "Processed Tokens: " << counter.get() << '\n';
+        std::cout << "Processed Tokens: " << counter.get() << '\n';
+        return 0;
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << '\n';
         return 1;
