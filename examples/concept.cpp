@@ -5,43 +5,42 @@
 
 namespace fp = flowpp;
 
-int main() {
+int main() try {
     std::ios::sync_with_stdio(false);
     std::cin.tie(nullptr);
 
-    try {
-        using Msg = fp::data<std::string>;
+    using Msg = fp::data<std::string>;
 
-        struct Printer final : fp::observer {
-            void notify(std::unique_ptr<Msg> data) override {
-                if (data) std::cout << "[Output] " << data->get() << '\n';
-            }
-        };
+    struct Scanner final : fp::observable {
+        std::unique_ptr<Msg> generate() {
+            std::string s;
+            if (std::cin >> s) return std::make_unique<Msg>(std::move(s));
+            if (std::cin.bad()) throw std::runtime_error("stdin I/O error");
+            return nullptr; // EOF
+        }
+    };
 
-        struct KeyScanner final : fp::observable {
-            std::unique_ptr<Msg> generate() {
-                std::string token;
-                if (std::cin >> token) return std::make_unique<Msg>(std::move(token));
-                if (std::cin.bad()) throw std::runtime_error("stdin I/O error");
-                return nullptr;
-            }
-        };
+    struct Printer final : fp::observer {
+        void notify(std::unique_ptr<Msg> d) override {
+            if (d) std::cout << d->get() << '\n';
+        }
+    };
 
-        fp::flowpp_engine engine;
+    fp::flowpp_engine engine;
 
-        auto& scanner = *engine.instantiate<KeyScanner>();
-        auto& counter = *engine.instantiate<fp::counter>();
-        auto& printer = *engine.instantiate<Printer>();
+    auto& scanner = *engine.instantiate<Scanner>();
+    auto& counter = *engine.instantiate<fp::counter>();
+    auto& printer = *engine.instantiate<Printer>();
 
-        scanner.subscribe(&counter);
-        counter.subscribe(&printer);
+    scanner.subscribe(&counter);
+    counter.subscribe(&printer);
 
-        engine.run();
+    engine.run();
 
-        std::cout << "Processed Tokens: " << counter.get() << '\n';
-        return 0;
-    } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << '\n';
-        return 1;
-    }
+    std::cout << "Processed Tokens: " << counter.get() << '\n';
+    return 0;
+
+} catch (const std::exception& e) {
+    std::cerr << "Error: " << e.what() << '\n';
+    return 1;
 }
