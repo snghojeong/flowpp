@@ -1,4 +1,5 @@
 #include <opencv2/opencv.hpp>
+
 #include <functional>
 #include <iostream>
 #include <string>
@@ -6,79 +7,92 @@
 
 class ImageSource {
 public:
-    explicit ImageSource(std::string path) : _path(std::move(path)) {}
-    void set_callback(std::function<void(cv::Mat&&)> cb) { on_image_ = std::move(cb); }
+    using Callback = std::function<void(const cv::Mat&)>;
 
-    bool run_once() {
-        cv::Mat img = cv::imread(_path, cv::IMREAD_COLOR);
-        if (img.empty()) {
-            std::cerr << "[ImageSource] Failed to load: " << path_ << "\n";
+    explicit ImageSource(std::string path) : path_(std::move(path)) {}
+
+    void setCallback(Callback callback) {
+        callback_ = std::move(callback);
+    }
+
+    bool run() const {
+        cv::Mat image = cv::imread(path_, cv::IMREAD_COLOR);
+        if (image.empty()) {
+            std::cerr << "Failed to load image: " << path_ << '\n';
             return false;
         }
-        if (on_image_) on_image_(std::move(img));
+
+        if (callback_) {
+            callback_(image);
+        }
+
         return true;
     }
 
 private:
-    std::string _path;
-    std::function<void(cv::Mat&&)> on_image_;
+    std::string path_;
+    Callback callback_;
 };
 
 class ImageProcessor {
 public:
-    void set_callback(std::function<void(cv::Mat&&)> cb) { downstream_ = std::move(cb); }
+    using Callback = std::function<void(const cv::Mat&)>;
 
-    // Upstream entry point
-    void on_image(cv::Mat&& img) {
-        // Example processing: BGR -> Gray -> slight blur
-        cv::Mat gray, blurred;
-        cv::cvtColor(img, gray, cv::COLOR_BGR2GRAY);
-        cv::GaussianBlur(gray, blurred, cv::Size(3, 3), 0.8);
-
-        // Optional: visualize intermediate
-        cv::imshow("Processed (Gray+Blur)", blurred);
-        cv::waitKey(1);
-
-        if (downstream_) downstream_(std::move(blurred));
+    void setCallback(Callback callback) {
+        callback_ = std::move(callback);
     }
 
-private:
-    std::function<void(cv::Mat&&)> downstream_;
-};
+    void process(const cv::Mat& input) const {
+        cv::Mat gray;
+        cv::Mat blurred;
 
-class ImageSink {
-public:
-    explicit ImageSink(std::string out_path) : out_path_(std::move(out_path)) {}
+        cv::cvtColor(input, gray, cv::COLOR_BGR2GRAY);
+        cv::GaussianBlur(gray, blurred, cv::Size(3, 3), 0.8);
 
-    void on_image(cv::Mat&& img) {
-        // Display & save
-        cv::imshow("Final", img);
-        cv::waitKey(0); // Wait for key before saving; adjust to taste.
+        cv::imshow("Processed", blurred);
+        cv::waitKey(1);
 
-        if (!cv::imwrite(out_path_, img)) {
-            std::cerr << "[ImageSink] Failed to write: " << out_path_ << "\n";
-        } else {
-            std::cout << "[ImageSink] Saved: " << out_path_ << "\n";
+        if (callback_) {
+            callback_(blurred);
         }
     }
 
 private:
-    std::string out_path_;
+    Callback callback_;
+};
+
+class ImageSink {
+public:
+    explicit ImageSink(std::string outputPath) : outputPath_(std::move(outputPath)) {}
+
+    void save(const cv::Mat& image) const {
+        cv::imshow("Final", image);
+        cv::waitKey(0);
+
+        if (!cv::imwrite(outputPath_, image)) {
+            std::cerr << "Failed to write image: " << outputPath_ << '\n';
+            return;
+        }
+
+        std::cout << "Saved image: " << outputPath_ << '\n';
+    }
+
+private:
+    std::string outputPath_;
 };
 
 int main() {
-    try {
-        ImageSource source{"image_src.jpg"};
-        ImageProcessor processor;
-        ImageSink sink{"image_processed.jpg"};
-        
-        processor.set_callback([&sink](cv::Mat&& m) { sink.on_image(std::move(m)); });
-        source.set_callback([&processor](cv::Mat&& m) { processor.on_image(std::move(m)); });
+    ImageSource source{"image_src.jpg"};
+    ImageProcessor processor;
+    ImageSink sink{"image_processed.jpg"};
 
-        if (!source.run_once()) return 1;
-        return 0;
-    } catch (const std::exception& e) {
-        std::cerr << "Unhandled exception: " << e.what() << "\n";
-        return -1;
-    }
+    processor.setCallback([&sink](const cv::Mat& image) {
+        sink.save(image);
+    });
+
+    source.setCallback([&processor](const cv::Mat& image) {
+        processor.process(image);
+    });
+
+    return source.run() ? 0 : 1;
 }
