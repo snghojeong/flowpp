@@ -25,7 +25,6 @@ int main() {
         std::cout << "Pipeline execution finished with status: " << result << std::endl;
 
     } catch (const std::exception& e) {
-        // Note: Standard exceptions use .what(), not .to_str()
         std::cerr << "Runtime Error: " << e.what() << std::endl;
         return 1;
     }
