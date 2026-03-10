@@ -8,7 +8,6 @@
 template <typename T>
 class source : public observable<T> {
 public:
-    // Use a type alias for better readability
     using DataPtr = std::unique_ptr<data<T>>;
     
     // Better callback signature: pass by const reference to the underlying data
