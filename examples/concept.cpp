@@ -3,6 +3,7 @@
 #include <string>
 #include <stdexcept>
 
+// Assuming flowpp is a placeholder for a reactive framework
 namespace fp = flowpp;
 
 int main() try {
@@ -14,24 +15,29 @@ int main() try {
     struct Scanner final : fp::observable {
         std::unique_ptr<Msg> generate() {
             std::string s;
+            // Directly constructing the unique_ptr from the stream result
             if (std::cin >> s) return std::make_unique<Msg>(std::move(s));
             if (std::cin.bad()) throw std::runtime_error("stdin I/O error");
-            return nullptr; // EOF
+            return nullptr; // EOF signal
         }
     };
 
     struct Printer final : fp::observer {
-        void notify(std::unique_ptr<Msg> d) override {
-            if (d) std::cout << d->get() << '\n';
+        // IMPROVEMENT: Accept by const reference to avoid ownership transfer
+        // and allow the engine to broadcast the same message to other observers.
+        void notify(const Msg& d) override {
+            std::cout << d.get() << '\n';
         }
     };
 
     fp::flowpp_engine engine;
 
+    // Standard engine instantiation
     auto& scanner = *engine.instantiate<Scanner>();
     auto& counter = *engine.instantiate<fp::counter>();
     auto& printer = *engine.instantiate<Printer>();
 
+    // Establishing the pipeline
     scanner.subscribe(&counter);
     counter.subscribe(&printer);
 
