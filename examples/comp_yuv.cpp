@@ -5,22 +5,22 @@
 using namespace flowpp;
 
 int main() {
+    // Define constants to ensure consistency across components
+    const int width = 640;
+    const int height = 360;
+    const int fps = 30;
+
     try {
-        // 1. Initialize the processing graph
         auto pipeline = std::make_unique<graph>();
 
-        // 2. Define components directly within the graph context
-        // Using descriptive names for clarity
-        auto source  = pipeline->get<yuv_source>("input.yuv", 640, 360);
-        auto encoder = pipeline->get<mpeg4_encoder>(640, 360, 30);
+        // Now components are guaranteed to share the same dimensions
+        auto source  = pipeline->get<yuv_source>("input.yuv", width, height);
+        auto encoder = pipeline->get<mpeg4_encoder>(width, height, fps);
         auto writer  = pipeline->get<file_writer>("output.mp4");
 
-        // 3. Link components using the pipe operator
         source | encoder | writer;
 
-        // 4. Execute the pipeline
-        // Parameters: timeout (ms), frame count
-        const int result = pipeline->run(5000, 30);
+        const int result = pipeline->run(5000, fps);
         
         std::cout << "Pipeline execution finished with status: " << result << std::endl;
 
