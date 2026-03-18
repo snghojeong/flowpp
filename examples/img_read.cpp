@@ -1,9 +1,10 @@
 #include <opencv2/opencv.hpp>
-
 #include <functional>
 #include <iostream>
 #include <string>
 #include <utility>
+
+// --- Components ---
 
 class ImageSource {
 public:
@@ -25,7 +26,6 @@ public:
         if (callback_) {
             callback_(image);
         }
-
         return true;
     }
 
@@ -43,13 +43,12 @@ public:
     }
 
     void process(const cv::Mat& input) const {
-        cv::Mat gray;
-        cv::Mat blurred;
+        cv::Mat gray, blurred;
 
         cv::cvtColor(input, gray, cv::COLOR_BGR2GRAY);
         cv::GaussianBlur(gray, blurred, cv::Size(3, 3), 0.8);
 
-        cv::imshow("Processed", blurred);
+        cv::imshow("Processing Step", blurred);
         cv::waitKey(1);
 
         if (callback_) {
@@ -66,7 +65,7 @@ public:
     explicit ImageSink(std::string outputPath) : outputPath_(std::move(outputPath)) {}
 
     void save(const cv::Mat& image) const {
-        cv::imshow("Final", image);
+        cv::imshow("Final Output", image);
         cv::waitKey(0);
 
         if (!cv::imwrite(outputPath_, image)) {
@@ -74,25 +73,32 @@ public:
             return;
         }
 
-        std::cout << "Saved image: " << outputPath_ << '\n';
+        std::cout << "Successfully saved: " << outputPath_ << '\n';
     }
 
 private:
     std::string outputPath_;
 };
 
+// --- Execution ---
+
 int main() {
+    // 1. Initialize components
     ImageSource source{"image_src.jpg"};
     ImageProcessor processor;
     ImageSink sink{"image_processed.jpg"};
 
-    processor.setCallback([&sink](const cv::Mat& image) {
-        sink.save(image);
+    // 2. Wire the pipeline (Linear Decoupling)
+    // We define the destination first, then work backwards to the source.
+    
+    processor.setCallback([&](const cv::Mat& img) {
+        sink.save(img);
     });
 
-    source.setCallback([&processor](const cv::Mat& image) {
-        processor.process(image);
+    source.setCallback([&](const cv::Mat& img) {
+        processor.process(img);
     });
 
+    // 3. Start the flow
     return source.run() ? 0 : 1;
 }
