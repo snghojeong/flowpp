@@ -1,15 +1,17 @@
 #include <iostream>
+#include <future> // Added for async execution
 #include <flowpp/flowpp.hpp>
 
 using namespace flowpp;
 
 int main() {
     try {
-        // Consolidate into functional groups (Transmission vs Reception)
+        // --- Setup Graphs ---
         graph txGraph;
         graph rxGraph;
 
         // --- TX Logic (Outgoing) ---
+        // We define the sender logic, which will push data to the receiver
         auto fileSrc   = txGraph.get<json_src>();
         auto tcpSender = txGraph.get<tcp_sender>();
 
@@ -33,11 +35,23 @@ int main() {
         // FTP
         tcpReceiver[port(22)] | ftp_parser | fileWriter("filename");
 
-        // Execute
-        std::cout << "Starting receiver graph..." << std::endl;
-        auto result = rxGraph.run(1000, INFINITE);
+        // --- Execution ---
+        std::cout << "Launching Transmission Thread..." << std::endl;
         
-        std::cout << "Result: " << result << std::endl;
+        // Use std::async to run the TX graph in the background
+        auto txFuture = std::async(std::launch::async, [&]() {
+            return txGraph.run(); 
+        });
+
+        std::cout << "Starting Receiver Graph (Blocking)..." << std::endl;
+        
+        // This blocks the main thread while listening for incoming data
+        auto rxResult = rxGraph.run(1000, INFINITE);
+        
+        // Clean up: Wait for the TX thread to wrap up if necessary
+        txFuture.get();
+
+        std::cout << "Receiver finished with result: " << rxResult << std::endl;
 
     } catch (const std::exception& e) {
         std::cerr << "Runtime Error: " << e.what() << std::endl;
