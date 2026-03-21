@@ -1,57 +1,51 @@
 #include <iostream>
-#include <future> // Added for async execution
 #include <flowpp/flowpp.hpp>
 
 using namespace flowpp;
 
 int main() {
     try {
-        // --- Setup Graphs ---
-        graph txGraph;
-        graph rxGraph;
+        // One graph to rule them all: Better resource scheduling
+        graph ioGraph;
 
         // --- TX Logic (Outgoing) ---
-        // We define the sender logic, which will push data to the receiver
-        auto fileSrc   = txGraph.get<json_src>();
-        auto tcpSender = txGraph.get<tcp_sender>();
+        auto fileSrc   = ioGraph.get<json_src>("data.json");
+        auto tcpSender = ioGraph.get<tcp_sender>();
 
-        fileSrc["mime/JSON"] | json_builder | http_builder | tcpSender["127.0.0.1"];
+        // Link TX: Source -> Builders -> Sender
+        fileSrc | json_builder | http_builder | tcpSender["127.0.0.1"];
 
         // --- RX Logic (Incoming) ---
-        auto fileWriter  = rxGraph.get<json_src>();
-        auto tcpReceiver = rxGraph.get<tcp_receiver>();
+        auto tcpReceiver = ioGraph.get<tcp_receiver>();
         
-        // JSON via HTTP
+        // Use a proper SINK for writing, not a SRC
+        auto jsonFileSink = ioGraph.get<json_sink>("recv.json");
+        auto genericSink  = ioGraph.get<file_sink>();
+
+        // JSON via HTTP (Port 80)
         tcpReceiver[port(80)] 
             | http_parser[content_type("application/json")] 
             | json_parser() 
-            | fileWriter("recv.json");
+            | jsonFileSink;
 
-        // Plain Text via HTTP
+        // Plain Text via HTTP (Port 8000)
         tcpReceiver[port(8000)] 
-            | http_parser[content_type("plain/text")] 
-            | [](const std::string& txt) { std::cout << "Log: " << txt << std::endl; };
+            | http_parser[content_type("text/plain")] 
+            | [](const std::string& txt) { 
+                std::cout << "Log: " << txt << std::endl; 
+              };
 
-        // FTP
-        tcpReceiver[port(22)] | ftp_parser | fileWriter("filename");
+        // FTP (Port 21 - Port 22 is usually SSH/SFTP)
+        tcpReceiver[port(21)] | ftp_parser | genericSink("ftp_recv.bin");
 
         // --- Execution ---
-        std::cout << "Launching Transmission Thread..." << std::endl;
+        std::cout << "Starting Unified IO Graph..." << std::endl;
         
-        // Use std::async to run the TX graph in the background
-        auto txFuture = std::async(std::launch::async, [&]() {
-            return txGraph.run(); 
-        });
-
-        std::cout << "Starting Receiver Graph (Blocking)..." << std::endl;
+        // .run() now handles both TX and RX simultaneously 
+        // because they belong to the same execution context.
+        auto result = ioGraph.run();
         
-        // This blocks the main thread while listening for incoming data
-        auto rxResult = rxGraph.run(1000, INFINITE);
-        
-        // Clean up: Wait for the TX thread to wrap up if necessary
-        txFuture.get();
-
-        std::cout << "Receiver finished with result: " << rxResult << std::endl;
+        std::cout << "Graph execution halted. Status: " << result << std::endl;
 
     } catch (const std::exception& e) {
         std::cerr << "Runtime Error: " << e.what() << std::endl;
