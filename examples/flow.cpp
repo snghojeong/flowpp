@@ -1,68 +1,74 @@
 #include <iostream>
+#include <csignal>
+#include <atomic>
 #include <flowpp/flowpp.hpp>
 
 using namespace flowpp;
 
-int main() {
-    // Set global logger for flowpp to see internal state transitions
-    logging::set_level(logging::level::info);
+// Global flag for graceful shutdown
+std::atomic<bool> keep_running{true};
+void signal_handler(int) { keep_running = false; }
 
-    try {
-        graph ioGraph;
+class DataHub {
+public:
+    DataHub() : ioGraph() {
+        setup_tx_logic();
+        setup_rx_logic();
+    }
 
-        // --- Configuration Constants ---
-        const std::string LOCAL_HOST = "127.0.0.1";
-        const int HTTP_PORT = 80;
-        const int TEXT_PORT = 8000;
-        const int FTP_PORT  = 21;
+    void start() {
+        std::cout << "DataHub: Starting event loop..." << std::endl;
+        // Run until the atomic flag is flipped or internal timeout hit
+        while (keep_running) {
+            ioGraph.run(std::chrono::milliseconds(200), 1); 
+        }
+        std::cout << "DataHub: Shutting down safely..." << std::endl;
+    }
 
-        // --- TX Logic (Outgoing) ---
-        // Improvement: Using 'optional' source to avoid crash if file is missing
+private:
+    graph ioGraph;
+
+    void setup_tx_logic() {
         auto fileSrc   = ioGraph.get<json_src>("data.json", node_option::optional);
         auto tcpSender = ioGraph.get<tcp_sender>();
 
-        fileSrc["mime/JSON"] | json_builder | http_builder | tcpSender[LOCAL_HOST];
+        // TX: JSON -> HTTP -> TCP
+        fileSrc["mime/JSON"] | json_builder | http_builder | tcpSender["127.0.0.1"];
+    }
 
-        // --- RX Logic (Incoming) ---
+    void setup_rx_logic() {
         auto tcpReceiver = ioGraph.get<tcp_receiver>();
-        
-        // Improvement: Use a dedicated 'file_sink' with 'append' mode for logs
-        auto jsonFileSink = ioGraph.get<json_sink>("recv.json", file_mode::overwrite);
-        auto logFileSink  = ioGraph.get<file_sink>("system.log", file_mode::append);
+        auto jsonSink    = ioGraph.get<json_sink>("recv.json", file_mode::overwrite);
+        auto logSink     = ioGraph.get<file_sink>("system.log", file_mode::append);
 
-        // JSON via HTTP (Port 80)
-        tcpReceiver[port(HTTP_PORT)] 
+        // Port 80: JSON Processor
+        tcpReceiver[port(80)] 
             | http_parser[content_type("application/json")] 
             | json_parser() 
-            | jsonFileSink;
+            | jsonSink;
 
-        // Plain Text via HTTP (Port 8000)
-        // Improvement: Directing logs to a file sink AND console (Tee-style)
-        tcpReceiver[port(TEXT_PORT)] 
+        // Port 8000: Log Processor with a named lambda for clarity
+        auto logger = [](const std::string& msg) {
+            std::cout << "[LOG]: " << msg << std::endl;
+            return msg; 
+        };
+
+        tcpReceiver[port(8000)] 
             | http_parser[content_type("text/plain")] 
-            | [&](const std::string& txt) {
-                std::cout << "[Incoming Log]: " << txt << std::endl;
-                return txt; // Pass-through for the next node
-              }
-            | logFileSink;
+            | logger 
+            | logSink;
+    }
+};
 
-        // FTP (Port 21)
-        tcpReceiver[port(FTP_PORT)] 
-            | ftp_parser 
-            | ioGraph.get<file_sink>("ftp_recv.bin");
+int main() {
+    // Register signal handler for Ctrl+C
+    std::signal(SIGINT, signal_handler);
 
-        // --- Execution ---
-        std::cout << "Graph initialized. Starting event loop..." << std::endl;
-        
-        // Improvement: Use a non-infinite timeout for clean shutdowns
-        // This allows the graph to process pending buffers before exiting.
-        auto result = ioGraph.run(std::chrono::milliseconds(500), 5000);
-        
-        std::cout << "Execution finished. Result Code: " << result << std::endl;
-
+    try {
+        DataHub hub;
+        hub.start();
     } catch (const std::exception& e) {
-        // Catch-all for networking (EADDRINUSE) or IO (Permission Denied) errors
-        std::cerr << "CRITICAL: " << e.what() << std::endl;
+        std::cerr << "Fatal Error: " << e.what() << std::endl;
         return 1;
     }
 
