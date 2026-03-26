@@ -10,26 +10,26 @@ using namespace flowpp;
 std::atomic<bool> keep_running{true};
 void signal_handler(int) { keep_running = false; }
 
-// --- Point of Improvement: Data Schema ---
 struct TelemetryData {
     int id;
     double value;
     std::string status;
 
-    // Helper to validate the structure
     bool is_valid() const { return id > 0 && !status.empty(); }
 };
 
 class DataHub {
 public:
-    DataHub() : ioGraph() {
+    // Improvement: Configure the graph with a thread pool (e.g., 4 threads)
+    DataHub() : ioGraph(execution_policy::parallel(4)) {
         setup_tx_logic();
         setup_rx_logic();
     }
 
     void start() {
-        std::cout << "DataHub: Active. Press Ctrl+C to stop." << std::endl;
+        std::cout << "DataHub: Running in parallel mode (4 threads)." << std::endl;
         while (keep_running) {
+            // Processing in small slices keeps the shutdown flag responsive
             ioGraph.run(std::chrono::milliseconds(100)); 
         }
     }
@@ -41,7 +41,7 @@ private:
         auto fileSrc   = ioGraph.get<json_src>("data.json", node_option::optional);
         auto tcpSender = ioGraph.get<tcp_sender>();
 
-        // TX: Source -> Buffer -> Builder -> Sender
+        // TX path runs on its own thread in the pool
         fileSrc["mime/JSON"] 
             | buffer(1024 * 1024) 
             | json_builder 
@@ -54,24 +54,19 @@ private:
         auto validSink   = ioGraph.get<json_sink>("verified_data.json", file_mode::append);
         auto errorLog    = ioGraph.get<file_sink>("error.log", file_mode::append);
 
-        // --- JSON Path (Port 80) with Schema Validation ---
+        // --- JSON Path (Port 80) ---
+        // The parser and the sink can now run on different threads simultaneously
         tcpReceiver[port(80)] 
             | http_parser[content_type("application/json")] 
             | buffer(500, strategy::backpressure) 
             | json_parser() 
             | [&](const json& j) -> std::optional<json> {
                 try {
-                    // Map JSON to our C++ struct
-                    TelemetryData data = j.get<TelemetryData>();
-                    
-                    if (data.is_valid()) {
-                        return j; // Pass valid JSON forward
-                    }
-                    throw std::runtime_error("Invalid field values");
+                    if (j.get<TelemetryData>().is_valid()) return j;
+                    throw std::runtime_error("Invalid Data");
                 } catch (...) {
-                    // Divert bad data to the error log instead of crashing
-                    errorLog.push("Malformed JSON received: " + j.dump());
-                    return std::nullopt; // Drop the item from the main flow
+                    errorLog.push("Validation failed for: " + j.dump());
+                    return std::nullopt;
                 }
               }
             | validSink;
