@@ -4,8 +4,6 @@
 #include <string>
 #include <utility>
 
-// --- Components ---
-
 class ImageSource {
 public:
     using Callback = std::function<void(const cv::Mat&)>;
@@ -79,8 +77,6 @@ public:
 private:
     std::string outputPath_;
 };
-
-// --- Execution ---
 
 int main() {
     // 1. Initialize components
