@@ -27,7 +27,7 @@ public:
     }
 
     void start() {
-        std::cout << "DataHub: System online. Monitoring ports 80, 8000." << std::endl;
+        std::cout << "DataHub: Resilient mode active. Monitoring ports 80, 8000." << std::endl;
         while (keep_running) {
             ioGraph.run(std::chrono::milliseconds(100)); 
         }
@@ -35,22 +35,24 @@ public:
 
 private:
     graph ioGraph;
-    std::atomic<uint64_t> total_processed; // Thread-safe counter
+    std::atomic<uint64_t> total_processed;
 
     void setup_health_monitor() {
-        // --- Improvement: Heartbeat Timer ---
-        // Emits a signal every 5 seconds to report system status
         auto timer = ioGraph.get<timer_source>(std::chrono::seconds(5));
-        
         timer | [&](const auto&) {
-            std::cout << "[HEALTH CHECK] Total Valid Packets: " 
-                      << total_processed.load() << " | Status: OK" << std::endl;
+            std::cout << "[SYSTEM STATUS] Processed: " << total_processed.load() 
+                      << " | Threads: 4 | Uptime: " << ioGraph.uptime().count() << "s" << std::endl;
         };
     }
 
     void setup_tx_logic() {
-        auto fileSrc   = ioGraph.get<json_src>("data.json", node_option::optional);
-        auto tcpSender = ioGraph.get<tcp_sender>();
+        auto fileSrc = ioGraph.get<json_src>("data.json", node_option::optional);
+        
+        // --- Improvement: Retry Policy for Sender ---
+        // If the destination is down, retry every 2 seconds instead of failing the graph
+        auto tcpSender = ioGraph.get<tcp_sender>(
+            retry_policy::exponential_backoff(std::chrono::seconds(2), std::chrono::seconds(30))
+        );
 
         fileSrc["mime/JSON"] 
             | buffer(1024 * 1024) 
@@ -60,11 +62,14 @@ private:
     }
 
     void setup_rx_logic() {
-        auto tcpReceiver = ioGraph.get<tcp_receiver>();
-        auto validSink   = ioGraph.get<json_sink>("verified_data.json", file_mode::append);
-        auto errorLog    = ioGraph.get<file_sink>("error.log", file_mode::append);
+        // --- Improvement: Resilient Receiver ---
+        // Automatically attempts to re-bind to the port if the interface fluctuates
+        auto tcpReceiver = ioGraph.get<tcp_receiver>(node_option::auto_restart);
+        
+        auto validSink = ioGraph.get<json_sink>("verified_data.json", file_mode::append);
+        auto errorLog  = ioGraph.get<file_sink>("error.log", file_mode::append);
 
-        // --- JSON Path (Port 80) ---
+        // JSON Path (Port 80)
         tcpReceiver[port(80)] 
             | http_parser[content_type("application/json")] 
             | buffer(500, strategy::backpressure) 
@@ -72,23 +77,23 @@ private:
             | [&](const json& j) -> std::optional<json> {
                 try {
                     if (j.get<TelemetryData>().is_valid()) {
-                        total_processed++; // Increment our health counter
+                        total_processed++;
                         return j;
                     }
-                    throw std::runtime_error("Validation Failed");
+                    throw std::runtime_error("Invalid Data");
                 } catch (...) {
-                    errorLog.push("ID Error: " + j.dump());
+                    errorLog.push("Validation Error: " + j.dump());
                     return std::nullopt;
                 }
               }
             | validSink;
 
-        // --- Log Path (Port 8000) ---
+        // Log Path (Port 8000)
         tcpReceiver[port(8000)] 
             | http_parser[content_type("text/plain")] 
             | buffer(100, strategy::drop_oldest) 
             | [](const std::string& msg) {
-                std::cout << "[REMOTE LOG]: " << msg << std::endl;
+                std::cout << "[REMOTE]: " << msg << std::endl;
                 return msg; 
               }
             | ioGraph.get<file_sink>("system.log", file_mode::append);
@@ -102,7 +107,9 @@ int main() {
         DataHub hub;
         hub.start();
     } catch (const std::exception& e) {
-        std::cerr << "Fatal Error: " << e.what() << std::endl;
+        // This now only catches configuration-time errors, 
+        // as runtime network errors are handled by the retry policies.
+        std::cerr << "Initialization Error: " << e.what() << std::endl;
         return 1;
     }
 
