@@ -4,6 +4,7 @@
 #include <string>
 #include <chrono>
 #include <flowpp/flowpp.hpp>
+#include <flowpp/zip.hpp> // Added for compression support
 
 using namespace flowpp;
 
@@ -27,7 +28,7 @@ public:
     }
 
     void start() {
-        std::cout << "DataHub: Resilient mode active. Monitoring ports 80, 8000." << std::endl;
+        std::cout << "DataHub: System active with GZIP compression enabled." << std::endl;
         while (keep_running) {
             ioGraph.run(std::chrono::milliseconds(100)); 
         }
@@ -40,16 +41,13 @@ private:
     void setup_health_monitor() {
         auto timer = ioGraph.get<timer_source>(std::chrono::seconds(5));
         timer | [&](const auto&) {
-            std::cout << "[SYSTEM STATUS] Processed: " << total_processed.load() 
-                      << " | Threads: 4 | Uptime: " << ioGraph.uptime().count() << "s" << std::endl;
+            std::cout << "[STATS] Packets: " << total_processed.load() 
+                      << " | Uptime: " << ioGraph.uptime().count() << "s" << std::endl;
         };
     }
 
     void setup_tx_logic() {
         auto fileSrc = ioGraph.get<json_src>("data.json", node_option::optional);
-        
-        // --- Improvement: Retry Policy for Sender ---
-        // If the destination is down, retry every 2 seconds instead of failing the graph
         auto tcpSender = ioGraph.get<tcp_sender>(
             retry_policy::exponential_backoff(std::chrono::seconds(2), std::chrono::seconds(30))
         );
@@ -62,14 +60,14 @@ private:
     }
 
     void setup_rx_logic() {
-        // --- Improvement: Resilient Receiver ---
-        // Automatically attempts to re-bind to the port if the interface fluctuates
         auto tcpReceiver = ioGraph.get<tcp_receiver>(node_option::auto_restart);
         
-        auto validSink = ioGraph.get<json_sink>("verified_data.json", file_mode::append);
+        // Sinks now use .gz extension to denote compressed format
+        auto validSink = ioGraph.get<json_sink>("verified_data.json.gz", file_mode::append);
+        auto logSink   = ioGraph.get<file_sink>("system.log.gz", file_mode::append);
         auto errorLog  = ioGraph.get<file_sink>("error.log", file_mode::append);
 
-        // JSON Path (Port 80)
+        // --- JSON Path with Compression ---
         tcpReceiver[port(80)] 
             | http_parser[content_type("application/json")] 
             | buffer(500, strategy::backpressure) 
@@ -80,15 +78,16 @@ private:
                         total_processed++;
                         return j;
                     }
-                    throw std::runtime_error("Invalid Data");
+                    throw std::runtime_error("Invalid");
                 } catch (...) {
-                    errorLog.push("Validation Error: " + j.dump());
+                    errorLog.push("Err: " + j.dump());
                     return std::nullopt;
                 }
               }
+            | zip_compressor(compression::gzip, 6) // Level 6: Balance of speed/size
             | validSink;
 
-        // Log Path (Port 8000)
+        // --- Log Path with Compression ---
         tcpReceiver[port(8000)] 
             | http_parser[content_type("text/plain")] 
             | buffer(100, strategy::drop_oldest) 
@@ -96,7 +95,8 @@ private:
                 std::cout << "[REMOTE]: " << msg << std::endl;
                 return msg; 
               }
-            | ioGraph.get<file_sink>("system.log", file_mode::append);
+            | zip_compressor(compression::gzip, 3) // Faster compression for logs
+            | logSink;
     }
 };
 
@@ -107,8 +107,6 @@ int main() {
         DataHub hub;
         hub.start();
     } catch (const std::exception& e) {
-        // This now only catches configuration-time errors, 
-        // as runtime network errors are handled by the retry policies.
         std::cerr << "Initialization Error: " << e.what() << std::endl;
         return 1;
     }
