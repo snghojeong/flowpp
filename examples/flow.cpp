@@ -4,7 +4,8 @@
 #include <string>
 #include <chrono>
 #include <flowpp/flowpp.hpp>
-#include <flowpp/zip.hpp> // Added for compression support
+#include <flowpp/zip.hpp> 
+#include <flowpp/crypto.hpp> // Added for AES-256 support
 
 using namespace flowpp;
 
@@ -21,6 +22,7 @@ struct TelemetryData {
 
 class DataHub {
 public:
+    // Initialize with a 4-thread pool for heavy Crypto/Zip lifting
     DataHub() : ioGraph(execution_policy::parallel(4)), total_processed(0) {
         setup_tx_logic();
         setup_rx_logic();
@@ -28,7 +30,7 @@ public:
     }
 
     void start() {
-        std::cout << "DataHub: System active with GZIP compression enabled." << std::endl;
+        std::cout << "DataHub: Secure Vault mode active (AES-256 + GZIP)." << std::endl;
         while (keep_running) {
             ioGraph.run(std::chrono::milliseconds(100)); 
         }
@@ -38,11 +40,14 @@ private:
     graph ioGraph;
     std::atomic<uint64_t> total_processed;
 
+    // Secure key management (In production, load this from a Key Vault/Env)
+    const std::string SECRET_KEY = "0123456789abcdef0123456789abcdef"; 
+
     void setup_health_monitor() {
         auto timer = ioGraph.get<timer_source>(std::chrono::seconds(5));
         timer | [&](const auto&) {
-            std::cout << "[STATS] Packets: " << total_processed.load() 
-                      << " | Uptime: " << ioGraph.uptime().count() << "s" << std::endl;
+            std::cout << "[ENCRYPTED SINK STATUS] Verified Packets: " 
+                      << total_processed.load() << std::endl;
         };
     }
 
@@ -52,50 +57,36 @@ private:
             retry_policy::exponential_backoff(std::chrono::seconds(2), std::chrono::seconds(30))
         );
 
-        fileSrc["mime/JSON"] 
-            | buffer(1024 * 1024) 
-            | json_builder 
-            | http_builder 
-            | tcpSender["127.0.0.1"];
+        fileSrc["mime/JSON"] | buffer(1024) | json_builder | http_builder | tcpSender["127.0.0.1"];
     }
 
     void setup_rx_logic() {
         auto tcpReceiver = ioGraph.get<tcp_receiver>(node_option::auto_restart);
         
-        // Sinks now use .gz extension to denote compressed format
-        auto validSink = ioGraph.get<json_sink>("verified_data.json.gz", file_mode::append);
-        auto logSink   = ioGraph.get<file_sink>("system.log.gz", file_mode::append);
-        auto errorLog  = ioGraph.get<file_sink>("error.log", file_mode::append);
+        // Output files are now .enc (Encrypted)
+        auto secureSink = ioGraph.get<file_sink>("telemetry.dat.enc", file_mode::append);
+        auto logSink    = ioGraph.get<file_sink>("system.log.enc", file_mode::append);
 
-        // --- JSON Path with Compression ---
+        // --- Secure JSON Path ---
         tcpReceiver[port(80)] 
             | http_parser[content_type("application/json")] 
-            | buffer(500, strategy::backpressure) 
             | json_parser() 
             | [&](const json& j) -> std::optional<json> {
-                try {
-                    if (j.get<TelemetryData>().is_valid()) {
-                        total_processed++;
-                        return j;
-                    }
-                    throw std::runtime_error("Invalid");
-                } catch (...) {
-                    errorLog.push("Err: " + j.dump());
-                    return std::nullopt;
+                if (j.get<TelemetryData>().is_valid()) {
+                    total_processed++;
+                    return j;
                 }
+                return std::nullopt;
               }
-            | zip_compressor(compression::gzip, 6) // Level 6: Balance of speed/size
-            | validSink;
+            | zip_compressor(compression::gzip) // 1. Compress
+            | aes_encryptor(SECRET_KEY)         // 2. Encrypt (AES-256-CBC)
+            | secureSink;                       // 3. Save
 
-        // --- Log Path with Compression ---
+        // --- Secure Log Path ---
         tcpReceiver[port(8000)] 
             | http_parser[content_type("text/plain")] 
-            | buffer(100, strategy::drop_oldest) 
-            | [](const std::string& msg) {
-                std::cout << "[REMOTE]: " << msg << std::endl;
-                return msg; 
-              }
-            | zip_compressor(compression::gzip, 3) // Faster compression for logs
+            | zip_compressor(compression::gzip) 
+            | aes_encryptor(SECRET_KEY) 
             | logSink;
     }
 };
@@ -107,7 +98,7 @@ int main() {
         DataHub hub;
         hub.start();
     } catch (const std::exception& e) {
-        std::cerr << "Initialization Error: " << e.what() << std::endl;
+        std::cerr << "Fatal Error: " << e.what() << std::endl;
         return 1;
     }
 
