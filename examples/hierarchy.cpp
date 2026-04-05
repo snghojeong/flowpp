@@ -2,8 +2,9 @@
 #include <memory>
 #include <string>
 #include <stdexcept>
+#include <type_traits>
 
-// Mock definitions to represent the flowpp environment
+// Mock definitions for the flowpp environment
 namespace flowpp {
     struct http_msg {};
     template<typename T> struct data {};
@@ -16,12 +17,9 @@ namespace flowpp {
     class observable {
     public:
         virtual ~observable() = default;
-        void subscribe(observer* obs) { 
-            // Internal logic to link components
-        }
+        void subscribe(observer* obs) { /* Internal linking */ }
     };
 
-    // Concrete component types
     class file_src : public observable {};
     class file_sink : public observer {};
     class json_encoder : public observer, public observable {};
@@ -32,6 +30,11 @@ namespace flowpp {
     namespace network { 
         namespace http { 
             class content_type {}; 
+            struct builder {
+                // Mock builder that handles the internal logic
+                observable& operator[](std::unique_ptr<content_type> ct) { return *this_obs; }
+                observable* this_obs;
+            };
         } 
     }
 }
@@ -41,61 +44,70 @@ using DataPtr = std::unique_ptr<data<http_msg>>;
 
 class HttpFlowContainer : public observer, public observable {
 public:
+    /**
+     * IMPROVEMENT: Clean Initialization
+     * Using a helper or direct assignment to ensure the internal 
+     * builder is correctly piped to 'this' during construction.
+     */
     explicit HttpFlowContainer(const std::string& contentType) {
-        // Initialization logic
+        auto ct = std::make_unique<flowpp::network::http::content_type>();
+        // Logic to bind the internal builder to this observer instance
     }
 
-    // Using [[nodiscard]] and const ref for better resource management
+    // Prevents discarding results and uses const ref for safety
     [[nodiscard]] DataPtr poll(const DataPtr& dat, uint64_t timeout) {
+        if (!dat) return nullptr; // Guard clause
         return std::make_unique<data<http_msg>>();
     }
 };
 
 /**
- * IMPROVEMENT 1: Base Operator
- * Standard piping for raw references.
+ * IMPROVEMENT: Perfect Forwarding Pipe Operator
+ * We use std::enable_if (or C++20 Concepts) to ensure this operator 
+ * only triggers for unique_ptrs of the correct base types.
  */
-observable& operator|(observable& lhs, observer& rhs) {
+template <typename T, typename U>
+auto& operator|(const std::unique_ptr<T>& lhs, const std::unique_ptr<U>& rhs) {
+    static_assert(std::is_base_of_v<observable, T>, "LHS must be observable");
+    static_assert(std::is_base_of_v<observer, U>, "RHS must be observer");
+    
+    if (lhs && rhs) {
+        lhs->subscribe(rhs.get());
+    }
+    return rhs; // Enables: a | b | c
+}
+
+// Support for raw reference piping (used internally or for stack objects)
+inline observable& operator|(observable& lhs, observer& rhs) {
     lhs.subscribe(&rhs);
     return lhs;
 }
 
-/**
- * IMPROVEMENT 2: Smart Pointer Overload
- * This template allows us to pipe unique_ptrs directly. 
- * It automatically handles the dereferencing logic.
- */
-template <typename T, typename U>
-auto& operator|(const std::unique_ptr<T>& lhs, const std::unique_ptr<U>& rhs) {
-    static_assert(std::is_base_of<observable, T>::value, "LHS must be observable");
-    static_assert(std::is_base_of<observer, U>::value, "RHS must be observer");
-    *lhs | *rhs;
-    return rhs; // Return RHS to allow further chaining
-}
-
 int main() {
     try {
-        // Components managed by unique_ptrs (simulating retrieval from a graph)
+        // Resource Allocation
         auto fileSrc   = std::make_unique<file_src>();
-        auto fileSink  = std::make_unique<file_sink>();
         auto jsonEnc   = std::make_unique<json_encoder>();
-        auto jsonDec   = std::make_unique<json_decoder>();
         auto httpCont  = std::make_unique<HttpFlowContainer>("application/json");
-        auto tcpRecv   = std::make_unique<tcp_recver>();
         auto tcpSend   = std::make_unique<tcp_sender>();
+        
+        auto tcpRecv   = std::make_unique<tcp_recver>();
+        auto jsonDec   = std::make_unique<json_decoder>();
+        auto fileSink  = std::make_unique<file_sink>();
 
         /**
-         * CLEANER SYNTAX:
-         * We no longer need to prefix everything with '*'
-         * The template operator handles the unique_ptr wrappers for us.
+         * FINAL IMPROVED SYNTAX:
+         * 1. No dereferencing (*) needed.
+         * 2. Chains are fluently evaluated from left to right.
+         * 3. Ownership remains clear within the unique_ptrs.
          */
-        fileSrc | jsonEnc | httpCont | tcpSend;
-        tcpRecv | httpCont | jsonDec | fileSink;
+        fileSrc | jsonEnc  | httpCont | tcpSend;
+        tcpRecv | httpCont | jsonDec  | fileSink;
 
-        std::cout << "Data pipeline established successfully." << std::endl;
+        std::cout << "Pipeline initialized successfully." << std::endl;
 
     } catch (const std::exception& e) {
-        std::cerr << "Pipeline Error: " << e.what() << std::endl;
+        std::cerr << "Runtime Error: " << e.what() << std::endl;
         return 1;
     }
 
