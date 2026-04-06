@@ -3,21 +3,18 @@
 #include <string>
 #include <stdexcept>
 #include <type_traits>
+#include <vector>
 
-// Mock definitions for the flowpp environment
+// --- Mock Framework Definitions ---
 namespace flowpp {
     struct http_msg {};
     template<typename T> struct data {};
     
-    class observer { 
-    public: 
-        virtual ~observer() = default; 
-    };
-
+    class observer { public: virtual ~observer() = default; };
     class observable {
     public:
         virtual ~observable() = default;
-        void subscribe(observer* obs) { /* Internal linking */ }
+        void subscribe(observer* obs) { /* Internal link logic */ }
     };
 
     class file_src : public observable {};
@@ -26,90 +23,82 @@ namespace flowpp {
     class json_decoder : public observer, public observable {};
     class tcp_sender : public observer {};
     class tcp_recver : public observable {};
-    
-    namespace network { 
-        namespace http { 
-            class content_type {}; 
-            struct builder {
-                // Mock builder that handles the internal logic
-                observable& operator[](std::unique_ptr<content_type> ct) { return *this_obs; }
-                observable* this_obs;
-            };
-        } 
-    }
 }
 
 using namespace flowpp;
 using DataPtr = std::unique_ptr<data<http_msg>>;
 
+// --- Component Definition ---
 class HttpFlowContainer : public observer, public observable {
 public:
-    /**
-     * IMPROVEMENT: Clean Initialization
-     * Using a helper or direct assignment to ensure the internal 
-     * builder is correctly piped to 'this' during construction.
-     */
     explicit HttpFlowContainer(const std::string& contentType) {
-        auto ct = std::make_unique<flowpp::network::http::content_type>();
-        // Logic to bind the internal builder to this observer instance
+        // Initialization using provided content type
     }
 
-    // Prevents discarding results and uses const ref for safety
     [[nodiscard]] DataPtr poll(const DataPtr& dat, uint64_t timeout) {
-        if (!dat) return nullptr; // Guard clause
-        return std::make_unique<data<http_msg>>();
+        return dat ? std::make_unique<data<http_msg>>() : nullptr;
     }
 };
 
-/**
- * IMPROVEMENT: Perfect Forwarding Pipe Operator
- * We use std::enable_if (or C++20 Concepts) to ensure this operator 
- * only triggers for unique_ptrs of the correct base types.
- */
-template <typename T, typename U>
-auto& operator|(const std::unique_ptr<T>& lhs, const std::unique_ptr<U>& rhs) {
-    static_assert(std::is_base_of_v<observable, T>, "LHS must be observable");
-    static_assert(std::is_base_of_v<observer, U>, "RHS must be observer");
-    
-    if (lhs && rhs) {
-        lhs->subscribe(rhs.get());
-    }
-    return rhs; // Enables: a | b | c
-}
+// --- Improved Pipe Operators ---
 
-// Support for raw reference piping (used internally or for stack objects)
+// 1. Raw Reference Pipe (The Primitive)
 inline observable& operator|(observable& lhs, observer& rhs) {
     lhs.subscribe(&rhs);
     return lhs;
 }
 
+// 2. Smart Pointer Pipe (The Convenience)
+// Uses SFINAE to ensure we only pipe flowpp components
+template <typename T, typename U, 
+          typename = std::enable_if_t<std::is_base_of_v<observable, T> && 
+                                     std::is_base_of_v<observer, U>>>
+auto& operator|(const std::unique_ptr<T>& lhs, const std::unique_ptr<U>& rhs) {
+    if (lhs && rhs) *lhs | *rhs;
+    return rhs;
+}
+
+// --- Pipeline Encapsulation ---
+struct NetworkPipeline {
+    std::unique_ptr<file_src> src;
+    std::unique_ptr<json_encoder> encoder;
+    std::unique_ptr<HttpFlowContainer> http;
+    std::unique_ptr<tcp_sender> sender;
+
+    static NetworkPipeline Create(const std::string& config) {
+        NetworkPipeline p;
+        p.src = std::make_unique<file_src>();
+        p.encoder = std::make_unique<json_encoder>();
+        p.http = std::make_unique<HttpFlowContainer>(config);
+        p.sender = std::make_unique<tcp_sender>();
+
+        // Internal wiring happens once here
+        p.src | p.encoder | p.http | p.sender;
+        
+        return p;
+    }
+};
+
+// --- Main Execution ---
 int main() {
     try {
-        // Resource Allocation
-        auto fileSrc   = std::make_unique<file_src>();
-        auto jsonEnc   = std::make_unique<json_encoder>();
-        auto httpCont  = std::make_unique<HttpFlowContainer>("application/json");
-        auto tcpSend   = std::make_unique<tcp_sender>();
+        // IMPROVEMENT: Main is now clean and high-level
+        auto tx_pipeline = NetworkPipeline::Create("application/json");
         
-        auto tcpRecv   = std::make_unique<tcp_recver>();
-        auto jsonDec   = std::make_unique<json_decoder>();
-        auto fileSink  = std::make_unique<file_sink>();
+        // Simulating the RX side similarly
+        auto tcpRecv  = std::make_unique<tcp_recver>();
+        auto jsonDec  = std::make_unique<json_decoder>();
+        auto fileSink = std::make_unique<file_sink>();
 
-        /**
-         * FINAL IMPROVED SYNTAX:
-         * 1. No dereferencing (*) needed.
-         * 2. Chains are fluently evaluated from left to right.
-         * 3. Ownership remains clear within the unique_ptrs.
-         */
-        fileSrc | jsonEnc  | httpCont | tcpSend;
-        tcpRecv | httpCont | jsonDec  | fileSink;
+        // Fluid chaining for custom/one-off graphs
+        tcpRecv | jsonDec | fileSink;
 
-        std::cout << "Pipeline initialized successfully." << std::endl;
+        std::cout << "Systems Online. Pipeline encapsulated and running." << std::endl;
 
     } catch (const std::exception& e) {
-        std::cerr << "Runtime Error: " << e.what() << std::endl;
-        return 1;
+        std::cerr << "Critical Failure: " << e.what() << std::endl;
+        return EXIT_FAILURE;
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }
