@@ -1,20 +1,21 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <stdexcept>
 #include <type_traits>
-#include <vector>
 
 // --- Mock Framework Definitions ---
 namespace flowpp {
     struct http_msg {};
     template<typename T> struct data {};
-    
+    const uint64_t INFINITE = 0xFFFFFFFFFFFFFFFF;
+
     class observer { public: virtual ~observer() = default; };
     class observable {
     public:
         virtual ~observable() = default;
-        void subscribe(observer* obs) { /* Internal link logic */ }
+        void subscribe(observer* obs) { if(obs) /* Internal link */ ; }
     };
 
     class file_src : public observable {};
@@ -23,6 +24,13 @@ namespace flowpp {
     class json_decoder : public observer, public observable {};
     class tcp_sender : public observer {};
     class tcp_recver : public observable {};
+    
+    // Mock Graph to simulate your tx_graph/rx_graph
+    struct Graph {
+        template<typename T>
+        T* get() { static T instance; return &instance; } 
+        void run(uint64_t, uint64_t) {}
+    };
 }
 
 using namespace flowpp;
@@ -31,72 +39,74 @@ using DataPtr = std::unique_ptr<data<http_msg>>;
 // --- Component Definition ---
 class HttpFlowContainer : public observer, public observable {
 public:
-    explicit HttpFlowContainer(const std::string& contentType) {
-        // Initialization using provided content type
+    // IMPROVEMENT: Use string_view to avoid copying the string buffer
+    explicit HttpFlowContainer(std::string_view contentType) {
+        // Initialization logic using contentType
     }
 
-    [[nodiscard]] DataPtr poll(const DataPtr& dat, uint64_t timeout) {
-        return dat ? std::make_unique<data<http_msg>>() : nullptr;
+    // IMPROVEMENT: Mark as 'noexcept' if it doesn't throw, and use [[nodiscard]]
+    [[nodiscard]] DataPtr poll(const DataPtr& dat, uint64_t timeout) noexcept {
+        try {
+            return dat ? std::make_unique<data<http_msg>>() : nullptr;
+        } catch (...) {
+            return nullptr;
+        }
     }
 };
 
 // --- Improved Pipe Operators ---
 
-// 1. Raw Reference Pipe (The Primitive)
+/**
+ * IMPROVEMENT: Using a template that handles both Raw Pointers and Smart Pointers.
+ * This is the most flexible approach for a library-style pipe operator.
+ */
+template <typename T, typename U>
+auto& operator|(T* lhs, U* rhs) {
+    static_assert(std::is_base_of_v<observable, T>, "LHS must be observable");
+    static_assert(std::is_base_of_v<observer, U>, "RHS must be observer");
+    if (lhs && rhs) lhs->subscribe(rhs);
+    return rhs;
+}
+
+// Support for chaining when mixed with raw references
 inline observable& operator|(observable& lhs, observer& rhs) {
     lhs.subscribe(&rhs);
     return lhs;
 }
 
-// 2. Smart Pointer Pipe (The Convenience)
-// Uses SFINAE to ensure we only pipe flowpp components
-template <typename T, typename U, 
-          typename = std::enable_if_t<std::is_base_of_v<observable, T> && 
-                                     std::is_base_of_v<observer, U>>>
-auto& operator|(const std::unique_ptr<T>& lhs, const std::unique_ptr<U>& rhs) {
-    if (lhs && rhs) *lhs | *rhs;
-    return rhs;
-}
-
-// --- Pipeline Encapsulation ---
-struct NetworkPipeline {
-    std::unique_ptr<file_src> src;
-    std::unique_ptr<json_encoder> encoder;
-    std::unique_ptr<HttpFlowContainer> http;
-    std::unique_ptr<tcp_sender> sender;
-
-    static NetworkPipeline Create(const std::string& config) {
-        NetworkPipeline p;
-        p.src = std::make_unique<file_src>();
-        p.encoder = std::make_unique<json_encoder>();
-        p.http = std::make_unique<HttpFlowContainer>(config);
-        p.sender = std::make_unique<tcp_sender>();
-
-        // Internal wiring happens once here
-        p.src | p.encoder | p.http | p.sender;
-        
-        return p;
-    }
-};
-
 // --- Main Execution ---
 int main() {
+    // Simulated global graphs
+    auto tx_graph = std::make_unique<Graph>();
+    auto rx_graph = std::make_unique<Graph>();
+
     try {
-        // IMPROVEMENT: Main is now clean and high-level
-        auto tx_pipeline = NetworkPipeline::Create("application/json");
+        /**
+         * IMPROVEMENT: Raw Pointer Usage.
+         * Since 'tx_graph' owns the components, we get raw pointers.
+         * This avoids 'double-free' errors and represents "view" access.
+         */
+        auto* fileSrc    = tx_graph->get<file_src>();
+        auto* jsonEnc    = tx_graph->get<json_encoder>();
+        auto* httpCont   = rx_graph->get<HttpFlowContainer>(); // Shared in your logic
+        auto* tcpSend    = tx_graph->get<tcp_sender>();
         
-        // Simulating the RX side similarly
-        auto tcpRecv  = std::make_unique<tcp_recver>();
-        auto jsonDec  = std::make_unique<json_decoder>();
-        auto fileSink = std::make_unique<file_sink>();
+        auto* tcpRecv    = rx_graph->get<tcp_recver>();
+        auto* jsonDec    = rx_graph->get<json_decoder>();
+        auto* fileSink   = rx_graph->get<file_sink>();
 
-        // Fluid chaining for custom/one-off graphs
-        tcpRecv | jsonDec | fileSink;
+        /**
+         * The pipe operator now works on raw pointers returned by the graph.
+         * This is much safer than wrapping them in unique_ptr at the call site.
+         */
+        fileSrc | jsonEnc | httpCont | tcpSend;
+        tcpRecv | httpCont | jsonDec | fileSink;
 
-        std::cout << "Systems Online. Pipeline encapsulated and running." << std::endl;
+        tx_graph->run(INFINITE, INFINITE);
+        rx_graph->run(INFINITE, INFINITE);
 
     } catch (const std::exception& e) {
-        std::cerr << "Critical Failure: " << e.what() << std::endl;
+        std::cerr << "Pipeline Exception: " << e.what() << std::endl;
         return EXIT_FAILURE;
     }
 
