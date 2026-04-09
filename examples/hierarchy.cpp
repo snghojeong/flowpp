@@ -4,22 +4,42 @@
 #include <string_view>
 #include <concepts>
 #include <functional>
+#include <mutex>
+#include <vector>
 
-// --- Modern Framework Definitions ---
+// --- Modern Thread-Safe Framework ---
 namespace flowpp {
     struct http_msg {};
     template<typename T> struct data {};
     const uint64_t INFINITE = 0xFFFFFFFFFFFFFFFF;
 
-    // Interface definitions
-    class observer { public: virtual ~observer() = default; };
+    class observer { 
+    public: 
+        virtual ~observer() = default; 
+        virtual void on_notify() = 0; // Pure virtual for concrete implementations
+    };
+
     class observable {
     public:
         virtual ~observable() = default;
-        void subscribe(observer* obs) { if(obs) /* Internal link */ ; }
+
+        /**
+         * IMPROVEMENT: Thread-Safe Subscription.
+         * Protects the internal list of observers from concurrent access 
+         * if graphs run in parallel threads.
+         */
+        void subscribe(observer* obs) {
+            if (!obs) return;
+            std::scoped_lock lock(mtx);
+            observers.push_back(obs);
+        }
+
+    private:
+        std::mutex mtx;
+        std::vector<observer*> observers;
     };
 
-    // Concepts for compile-time safety (C++20)
+    // Concepts for C++20
     template<typename T>
     concept FlowObserver = std::derived_from<T, observer>;
 
@@ -27,49 +47,47 @@ namespace flowpp {
     concept FlowObservable = std::derived_from<T, observable>;
 
     // Concrete Components
-    class file_src : public observable {};
-    class file_sink : public observer {};
-    class json_encoder : public observer, public observable {};
-    class json_decoder : public observer, public observable {};
-    class tcp_sender : public observer {};
-    class tcp_recver : public observable {};
+    class file_src     : public observable {};
+    class file_sink    : public observer { public: void on_notify() override {} };
+    class json_encoder : public observer, public observable { public: void on_notify() override {} };
+    class json_decoder : public observer, public observable { public: void on_notify() override {} };
+    class tcp_sender   : public observer { public: void on_notify() override {} };
+    class tcp_recver   : public observable {};
 }
 
 using namespace flowpp;
 using DataPtr = std::unique_ptr<data<http_msg>>;
 
-// --- Improved Component with Dependency Injection ---
+// --- Logic-Injected Component ---
 class HttpFlowContainer : public observer, public observable {
 public:
-    // IMPROVEMENT: Inject logic via std::function to make the container reusable
     using Processor = std::function<DataPtr(const DataPtr&, uint64_t)>;
 
+    // Rule of Zero: No manual destructor/copy logic needed
     explicit HttpFlowContainer(std::string_view contentType, Processor proc = nullptr) 
-        : processor(std::move(proc)) {}
+        : content_type(contentType), processor(std::move(proc)) {}
+
+    void on_notify() override { /* Process incoming data */ }
 
     [[nodiscard]] DataPtr poll(const DataPtr& dat, uint64_t timeout) noexcept {
-        if (processor) return processor(dat, timeout);
-        return dat ? std::make_unique<data<http_msg>>() : nullptr;
+        return processor ? processor(dat, timeout) : nullptr;
     }
 
 private:
+    std::string content_type;
     Processor processor;
 };
 
-// --- Modern Pipe Operators ---
+// --- Universal Pipe Operators ---
 
-/**
- * IMPROVEMENT: Using C++20 Concepts.
- * This ensures the pipe operator only works on types that satisfy 
- * the FlowObservable and FlowObserver requirements.
- */
+// Handles Raw Pointers
 template <FlowObservable T, FlowObserver U>
 auto* operator|(T* lhs, U* rhs) {
     if (lhs && rhs) lhs->subscribe(rhs);
     return rhs;
 }
 
-// Support for chaining mixed types (unique_ptr and raw pointers)
+// Handles Unique Pointers
 template <FlowObservable T, FlowObserver U>
 auto& operator|(const std::unique_ptr<T>& lhs, const std::unique_ptr<U>& rhs) {
     lhs.get() | rhs.get();
@@ -79,28 +97,30 @@ auto& operator|(const std::unique_ptr<T>& lhs, const std::unique_ptr<U>& rhs) {
 // --- Main Execution ---
 int main() {
     try {
-        // Use smart pointers for root-level ownership
+        // 1. Memory Setup
         auto fileSrc   = std::make_unique<file_src>();
         auto jsonEnc   = std::make_unique<json_encoder>();
         auto tcpSend   = std::make_unique<tcp_sender>();
-        
-        // Custom logic injected into the container at runtime
+        auto tcpRecv   = std::make_unique<tcp_recver>();
+        auto fileSink  = std::make_unique<file_sink>();
+
+        // 2. Component with custom behavior
         auto httpCont = std::make_unique<HttpFlowContainer>("application/json", 
             [](const DataPtr& d, uint64_t t) -> DataPtr {
-                std::cout << "Custom processing logic triggered..." << std::endl;
                 return std::make_unique<data<http_msg>>();
             });
 
         /**
-         * FINAL REFINED SYNTAX:
-         * Clean, type-safe, and highly readable.
+         * 3. FINAL SYNTAX:
+         * Thread-safe, type-checked (C++20), and no raw pointer management.
          */
-        fileSrc | jsonEnc | httpCont | tcpSend;
+        fileSrc | jsonEnc  | httpCont | tcpSend;
+        tcpRecv | httpCont | fileSink;
 
-        std::cout << "Pipeline fully operational with injected logic." << std::endl;
+        std::cout << "Thread-safe pipeline initialized." << std::endl;
 
     } catch (const std::exception& e) {
-        std::cerr << "Fatal Pipeline Error: " << e.what() << std::endl;
+        std::cerr << "Pipeline Error: " << e.what() << std::endl;
         return EXIT_FAILURE;
     }
 
