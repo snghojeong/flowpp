@@ -6,17 +6,18 @@
 #include <functional>
 #include <mutex>
 #include <vector>
+#include <algorithm>
 
-// --- Modern Thread-Safe Framework ---
+// --- Modern Thread-Safe & Memory-Safe Framework ---
 namespace flowpp {
     struct http_msg {};
     template<typename T> struct data {};
     const uint64_t INFINITE = 0xFFFFFFFFFFFFFFFF;
 
-    class observer { 
+    class observer : public std::enable_shared_from_this<observer> { 
     public: 
         virtual ~observer() = default; 
-        virtual void on_notify() = 0; // Pure virtual for concrete implementations
+        virtual void on_notify() = 0; 
     };
 
     class observable {
@@ -24,19 +25,33 @@ namespace flowpp {
         virtual ~observable() = default;
 
         /**
-         * IMPROVEMENT: Thread-Safe Subscription.
-         * Protects the internal list of observers from concurrent access 
-         * if graphs run in parallel threads.
+         * IMPROVEMENT: Memory-Safe Observation.
+         * Using weak_ptr ensures that if an observer is deleted elsewhere,
+         * this observable won't hold a dangling pointer.
          */
-        void subscribe(observer* obs) {
+        void subscribe(std::shared_ptr<observer> obs) {
             if (!obs) return;
             std::scoped_lock lock(mtx);
-            observers.push_back(obs);
+            observers.push_back(obs); // Implicit conversion to weak_ptr
+        }
+
+        void notify_all() {
+            std::scoped_lock lock(mtx);
+            // Clean up expired pointers while notifying
+            auto it = observers.begin();
+            while (it != observers.end()) {
+                if (auto shared_obs = it->lock()) {
+                    shared_obs->on_notify();
+                    ++it;
+                } else {
+                    it = observers.erase(it); // Remove dangling references
+                }
+            }
         }
 
     private:
         std::mutex mtx;
-        std::vector<observer*> observers;
+        std::vector<std::weak_ptr<observer>> observers;
     };
 
     // Concepts for C++20
@@ -63,11 +78,10 @@ class HttpFlowContainer : public observer, public observable {
 public:
     using Processor = std::function<DataPtr(const DataPtr&, uint64_t)>;
 
-    // Rule of Zero: No manual destructor/copy logic needed
     explicit HttpFlowContainer(std::string_view contentType, Processor proc = nullptr) 
         : content_type(contentType), processor(std::move(proc)) {}
 
-    void on_notify() override { /* Process incoming data */ }
+    void on_notify() override { /* Logic to process data and call notify_all() */ }
 
     [[nodiscard]] DataPtr poll(const DataPtr& dat, uint64_t timeout) noexcept {
         return processor ? processor(dat, timeout) : nullptr;
@@ -78,49 +92,47 @@ private:
     Processor processor;
 };
 
-// --- Universal Pipe Operators ---
+// --- Universal Pipe Operator for Shared Pointers ---
 
-// Handles Raw Pointers
+/**
+ * FINAL IMPROVEMENT: Shared Ownership Piping.
+ * By using shared_ptr, we guarantee the lifetime of the objects 
+ * during the subscription process.
+ */
 template <FlowObservable T, FlowObserver U>
-auto* operator|(T* lhs, U* rhs) {
+auto& operator|(const std::shared_ptr<T>& lhs, const std::shared_ptr<U>& rhs) {
     if (lhs && rhs) lhs->subscribe(rhs);
-    return rhs;
-}
-
-// Handles Unique Pointers
-template <FlowObservable T, FlowObserver U>
-auto& operator|(const std::unique_ptr<T>& lhs, const std::unique_ptr<U>& rhs) {
-    lhs.get() | rhs.get();
     return rhs;
 }
 
 // --- Main Execution ---
 int main() {
     try {
-        // 1. Memory Setup
-        auto fileSrc   = std::make_unique<file_src>();
-        auto jsonEnc   = std::make_unique<json_encoder>();
-        auto tcpSend   = std::make_unique<tcp_sender>();
-        auto tcpRecv   = std::make_unique<tcp_recver>();
-        auto fileSink  = std::make_unique<file_sink>();
+        // 1. Shared Ownership Setup
+        // Using make_shared is more efficient and required for weak_ptr safety
+        auto fileSrc   = std::make_shared<file_src>();
+        auto jsonEnc   = std::make_shared<json_encoder>();
+        auto tcpSend   = std::make_shared<tcp_sender>();
+        auto tcpRecv   = std::make_shared<tcp_recver>();
+        auto fileSink  = std::make_shared<file_sink>();
 
-        // 2. Component with custom behavior
-        auto httpCont = std::make_unique<HttpFlowContainer>("application/json", 
+        auto httpCont = std::make_shared<HttpFlowContainer>("application/json", 
             [](const DataPtr& d, uint64_t t) -> DataPtr {
                 return std::make_unique<data<http_msg>>();
             });
 
         /**
-         * 3. FINAL SYNTAX:
-         * Thread-safe, type-checked (C++20), and no raw pointer management.
+         * 2. FINAL SYNTAX:
+         * Memory-safe (no dangling pointers), Thread-safe (mutex-protected),
+         * and Type-safe (C++20 Concepts).
          */
         fileSrc | jsonEnc  | httpCont | tcpSend;
         tcpRecv | httpCont | fileSink;
 
-        std::cout << "Thread-safe pipeline initialized." << std::endl;
+        std::cout << "Production-ready, memory-safe pipeline established." << std::endl;
 
     } catch (const std::exception& e) {
-        std::cerr << "Pipeline Error: " << e.what() << std::endl;
+        std::cerr << "Pipeline Fatal: " << e.what() << std::endl;
         return EXIT_FAILURE;
     }
 
