@@ -7,12 +7,13 @@
 #include <mutex>
 #include <vector>
 
-// --- Framework Core ---
 namespace flowpp {
+    // Basic types
     struct http_msg {};
     template<typename T> struct data {};
     const uint64_t INFINITE = 0xFFFFFFFFFFFFFFFF;
 
+    // Interfaces
     class observer { 
     public: 
         virtual ~observer() = default; 
@@ -22,11 +23,13 @@ namespace flowpp {
     class observable {
     public:
         virtual ~observable() = default;
+        
         void subscribe(std::shared_ptr<observer> obs) {
             if (!obs) return;
             std::scoped_lock lock(mtx);
             observers.push_back(obs);
         }
+
     protected:
         void notify_observers() {
             std::scoped_lock lock(mtx);
@@ -39,6 +42,7 @@ namespace flowpp {
                 }
             }
         }
+
     private:
         std::mutex mtx;
         std::vector<std::weak_ptr<observer>> observers;
@@ -50,64 +54,58 @@ namespace flowpp {
 
     template<typename T>
     concept FlowObservable = std::derived_from<T, observable>;
-}
 
-using namespace flowpp;
-using DataPtr = std::unique_ptr<data<http_msg>>;
-
-// --- Domain Components ---
-class HttpFlowContainer : public observer, public observable {
-public:
-    using Processor = std::function<DataPtr(const DataPtr&, uint64_t)>;
-
-    explicit HttpFlowContainer(std::string_view contentType, Processor proc = nullptr) 
-        : content_type(contentType), processor(std::move(proc)) {}
-
-    void on_notify() override { 
-        // Logic to move data through the pipe
-        notify_observers(); 
+    /**
+     * IMPROVEMENT: Namespace-scoped, nodiscard pipe operator.
+     * Returning the RHS by reference allows for fluid chaining.
+     */
+    template <FlowObservable T, FlowObserver U>
+    [[nodiscard]] auto& operator|(const std::shared_ptr<T>& lhs, const std::shared_ptr<U>& rhs) {
+        if (lhs && rhs) lhs->subscribe(rhs);
+        return rhs;
     }
 
-private:
-    std::string content_type;
-    Processor processor;
-};
+    // Concrete Components
+    class file_src     : public observable {};
+    class file_sink    : public observer { public: void on_notify() override {} };
+    class json_encoder : public observer, public observable { public: void on_notify() override {} };
+    class json_decoder : public observer, public observable { public: void on_notify() override {} };
+    class tcp_sender   : public observer { public: void on_notify() override {} };
+    class tcp_recver   : public observable {};
 
-// --- Pipeline Component Factory (The final polish) ---
-// This allows us to chain components without worrying about the pointer type
-template <FlowObservable T, FlowObserver U>
-auto& operator|(const std::shared_ptr<T>& lhs, const std::shared_ptr<U>& rhs) {
-    if (lhs && rhs) lhs->subscribe(rhs);
-    return rhs;
+    class HttpFlowContainer : public observer, public observable {
+    public:
+        using Processor = std::function<std::unique_ptr<data<http_msg>>(const std::unique_ptr<data<http_msg>>&, uint64_t)>;
+
+        explicit HttpFlowContainer(std::string_view contentType, Processor proc = nullptr) 
+            : content_type(contentType), processor(std::move(proc)) {}
+
+        void on_notify() override { notify_observers(); }
+
+    private:
+        std::string content_type;
+        Processor processor;
+    };
 }
 
-// Concrete component classes
-class file_src : public observable {};
-class file_sink : public observer { public: void on_notify() override {} };
-class json_encoder : public observer, public observable { public: void on_notify() override {} };
-class json_decoder : public observer, public observable { public: void on_notify() override {} };
-class tcp_sender : public observer { public: void on_notify() override {} };
-class tcp_recver : public observable {};
-
-// --- Main Execution ---
 int main() {
+    using namespace flowpp;
+
     try {
+        // Initialize components as shared_ptrs for weak_ptr compatibility
+        auto src     = std::make_shared<file_src>();
+        auto encoder = std::make_shared<json_encoder>();
+        auto http    = std::make_shared<HttpFlowContainer>("application/json");
+        auto sender  = std::make_shared<tcp_sender>();
+
         /**
-         * FINAL IMPROVEMENT: Component Grouping
-         * We now treat the components as a structured "Service" layout.
+         * The pipe is now clean, thread-safe, and memory-safe.
+         * We cast to void or just use the chain to satisfy [[nodiscard]].
          */
-        struct Pipeline {
-            std::shared_ptr<file_src> src           = std::make_shared<file_src>();
-            std::shared_ptr<json_encoder> encoder   = std::make_shared<json_encoder>();
-            std::shared_ptr<HttpFlowContainer> http = std::make_shared<HttpFlowContainer>("application/json");
-            std::shared_ptr<tcp_sender> sender     = std::make_shared<tcp_sender>();
-        } tx;
+        (void)(src | encoder | http | sender);
 
-        // The syntax is now incredibly clean and handles all complexity behind the scenes
-        tx.src | tx.encoder | tx.http | tx.sender;
+        std::cout << "Optimized Pipeline established successfully." << std::endl;
 
-        std::cout << "High-performance C++26 style pipeline initialized." << std::endl;
-        
     } catch (const std::exception& e) {
         std::cerr << "Pipeline error: " << e.what() << std::endl;
         return EXIT_FAILURE;
