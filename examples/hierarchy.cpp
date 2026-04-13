@@ -8,15 +8,14 @@
 #include <vector>
 
 namespace flowpp {
-    // Basic types
     struct http_msg {};
     template<typename T> struct data {};
     const uint64_t INFINITE = 0xFFFFFFFFFFFFFFFF;
 
-    // Interfaces
+    // --- Base Interfaces ---
     class observer { 
     public: 
-        virtual ~observer() = default; 
+        virtual ~observer() = default; // Essential for safe inheritance
         virtual void on_notify() = 0; 
     };
 
@@ -24,67 +23,73 @@ namespace flowpp {
     public:
         virtual ~observable() = default;
         
-        void subscribe(std::shared_ptr<observer> obs) {
+        void subscribe(observer* obs) {
             if (!obs) return;
             std::scoped_lock lock(mtx);
             observers.push_back(obs);
         }
 
+        // Overload to support shared_ptr directly
+        void subscribe(const std::shared_ptr<observer>& obs) {
+            subscribe(obs.get());
+        }
+
     protected:
         void notify_observers() {
             std::scoped_lock lock(mtx);
-            for (auto it = observers.begin(); it != observers.end(); ) {
-                if (auto shared_obs = it->lock()) {
-                    shared_obs->on_notify();
-                    ++it;
-                } else {
-                    it = observers.erase(it);
-                }
+            for (auto* obs : observers) {
+                if (obs) obs->on_notify();
             }
         }
 
     private:
         std::mutex mtx;
-        std::vector<std::weak_ptr<observer>> observers;
+        std::vector<observer*> observers;
     };
 
-    // C++20 Concepts
+    // --- C++20 Concepts ---
     template<typename T>
     concept FlowObserver = std::derived_from<T, observer>;
 
     template<typename T>
     concept FlowObservable = std::derived_from<T, observable>;
 
-    /**
-     * IMPROVEMENT: Namespace-scoped, nodiscard pipe operator.
-     * Returning the RHS by reference allows for fluid chaining.
-     */
+    // --- The Universal Pipe Operators ---
+    
+    // 1. Pipe for raw references (Internal use)
     template <FlowObservable T, FlowObserver U>
-    [[nodiscard]] auto& operator|(const std::shared_ptr<T>& lhs, const std::shared_ptr<U>& rhs) {
-        if (lhs && rhs) lhs->subscribe(rhs);
+    auto& operator|(T& lhs, U& rhs) {
+        lhs.subscribe(&rhs);
         return rhs;
     }
 
-    // Concrete Components
+    // 2. Pipe for shared_ptrs (External use)
+    template <FlowObservable T, FlowObserver U>
+    [[nodiscard]] auto& operator|(const std::shared_ptr<T>& lhs, const std::shared_ptr<U>& rhs) {
+        if (lhs && rhs) *lhs | *rhs;
+        return rhs;
+    }
+
+    // --- Components ---
     class file_src     : public observable {};
     class file_sink    : public observer { public: void on_notify() override {} };
     class json_encoder : public observer, public observable { public: void on_notify() override {} };
-    class json_decoder : public observer, public observable { public: void on_notify() override {} };
     class tcp_sender   : public observer { public: void on_notify() override {} };
-    class tcp_recver   : public observable {};
+
+    // Mock internal builder to show internal piping
+    struct internal_builder : public observable {};
 
     class HttpFlowContainer : public observer, public observable {
     public:
-        using Processor = std::function<std::unique_ptr<data<http_msg>>(const std::unique_ptr<data<http_msg>>&, uint64_t)>;
-
-        explicit HttpFlowContainer(std::string_view contentType, Processor proc = nullptr) 
-            : content_type(contentType), processor(std::move(proc)) {}
+        explicit HttpFlowContainer(std::string_view contentType) {
+            // IMPROVEMENT: Use the pipe operator internally for consistency
+            builder | *this; 
+        }
 
         void on_notify() override { notify_observers(); }
 
     private:
-        std::string content_type;
-        Processor processor;
+        internal_builder builder;
     };
 }
 
@@ -92,22 +97,19 @@ int main() {
     using namespace flowpp;
 
     try {
-        // Initialize components as shared_ptrs for weak_ptr compatibility
+        // High-level assembly
         auto src     = std::make_shared<file_src>();
         auto encoder = std::make_shared<json_encoder>();
         auto http    = std::make_shared<HttpFlowContainer>("application/json");
         auto sender  = std::make_shared<tcp_sender>();
 
-        /**
-         * The pipe is now clean, thread-safe, and memory-safe.
-         * We cast to void or just use the chain to satisfy [[nodiscard]].
-         */
+        // Fluent, thread-safe, and type-checked chain
         (void)(src | encoder | http | sender);
 
-        std::cout << "Optimized Pipeline established successfully." << std::endl;
+        std::cout << "Final Optimized Pipeline established." << std::endl;
 
     } catch (const std::exception& e) {
-        std::cerr << "Pipeline error: " << e.what() << std::endl;
+        std::cerr << "Error: " << e.what() << std::endl;
         return EXIT_FAILURE;
     }
 
