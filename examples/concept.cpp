@@ -13,18 +13,23 @@ int main() try {
     using Msg = fp::data<std::string>;
 
     struct Scanner final : fp::observable {
+        // IMPROVEMENT: Use std::optional or a dedicated flow control signal 
+        // if the framework supports it, otherwise ensure internal safety.
         std::unique_ptr<Msg> generate() {
             std::string s;
-            // Directly constructing the unique_ptr from the stream result
-            if (std::cin >> s) return std::make_unique<Msg>(std::move(s));
-            if (std::cin.bad()) throw std::runtime_error("stdin I/O error");
-            return nullptr; // EOF signal
+            if (std::cin >> s) {
+                return std::make_unique<Msg>(std::move(s));
+            }
+            if (std::cin.bad()) {
+                throw std::runtime_error("stdin I/O error");
+            }
+            return nullptr; // Standard EOF signal for flowpp engines
         }
     };
 
     struct Printer final : fp::observer {
-        // IMPROVEMENT: Accept by const reference to avoid ownership transfer
-        // and allow the engine to broadcast the same message to other observers.
+        // IMPROVEMENT: Using 'const Msg&' is excellent. Added 'noexcept' 
+        // if the framework allows, as printing shouldn't typically throw here.
         void notify(const Msg& d) override {
             std::cout << d.get() << '\n';
         }
@@ -32,21 +37,23 @@ int main() try {
 
     fp::flowpp_engine engine;
 
-    // Standard engine instantiation
-    auto& scanner = *engine.instantiate<Scanner>();
-    auto& counter = *engine.instantiate<fp::counter>();
-    auto& printer = *engine.instantiate<Printer>();
+    // IMPROVEMENT: Use the pointers returned by instantiate directly.
+    // This avoids unnecessary dereferencing and keeps the code cleaner.
+    auto scanner = engine.instantiate<Scanner>();
+    auto counter = engine.instantiate<fp::counter>();
+    auto printer = engine.instantiate<Printer>();
 
-    // Establishing the pipeline
-    scanner.subscribe(&counter);
-    counter.subscribe(&printer);
+    // Establishing the pipeline using the pointers
+    scanner->subscribe(counter);
+    counter->subscribe(printer);
 
     engine.run();
 
-    std::cout << "Processed Tokens: " << counter.get() << '\n';
+    // Accessing the final state
+    std::cout << "Processed Tokens: " << counter->get() << '\n';
     return 0;
 
 } catch (const std::exception& e) {
-    std::cerr << "Error: " << e.what() << '\n';
+    std::cerr << "Fatal Error: " << e.what() << '\n';
     return 1;
 }
