@@ -7,7 +7,6 @@
 namespace fp = flowpp;
 
 int main() try {
-    // Optimization for high-throughput I/O
     std::ios::sync_with_stdio(false);
     std::cin.tie(nullptr);
 
@@ -16,45 +15,48 @@ int main() try {
     struct Scanner final : fp::observable {
         std::unique_ptr<Msg> generate() {
             std::string s;
-            // Improvement: Clearer logic for stream exhaustion
-            if (!(std::cin >> s)) {
-                if (std::cin.bad()) throw std::runtime_error("stdin I/O error");
-                return nullptr; // Clean EOF
+            // IMPROVEMENT: Added validation to skip empty tokens or whitespace.
+            // This ensures the pipeline only processes meaningful data.
+            while (std::cin >> s) {
+                if (!s.empty()) { 
+                    return std::make_unique<Msg>(std::move(s));
+                }
             }
-            return std::make_unique<Msg>(std::move(s));
+
+            if (std::cin.bad()) {
+                throw std::runtime_error("stdin I/O error");
+            }
+            return nullptr; // EOF
         }
     };
 
     struct Printer final : fp::observer {
         void notify(const Msg& d) override {
-            // IMPROVEMENT: Use std::endl or explicit flush if this is the end of the pipe
-            // to ensure the user sees the output in real-time.
-            std::cout << d.get() << std::endl; 
+            // Using '\n' with an explicit flush is often faster than std::endl
+            // while still ensuring the user sees the output.
+            std::cout << d.get() << "\n" << std::flush;
         }
     };
 
     fp::flowpp_engine engine;
 
-    // Instantiate components managed by the engine
+    // Component instantiation
     auto scanner = engine.instantiate<Scanner>();
     auto counter = engine.instantiate<fp::counter>();
     auto printer = engine.instantiate<Printer>();
 
-    // IMPROVEMENT: Established a cleaner "Fluent Interface" style connection
-    // if the framework supports it, otherwise keep the pointer-based subscription.
+    // Pipeline setup
     scanner->subscribe(counter);
     counter->subscribe(printer);
 
-    // Start processing
     engine.run();
 
-    // Final Reporting
-    std::cout << "\n--- Statistics ---\n";
-    std::cout << "Processed Tokens: " << counter->get() << std::endl;
-
+    // Final result output
+    std::cout << "--- Processed Tokens: " << counter->get() << " ---\n";
+    
     return 0;
 
 } catch (const std::exception& e) {
-    std::cerr << "Fatal Error: " << e.what() << std::endl;
+    std::cerr << "Fatal Error: " << e.what() << '\n';
     return 1;
 }
