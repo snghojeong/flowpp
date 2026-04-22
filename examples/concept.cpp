@@ -15,43 +15,39 @@ int main() try {
     struct Scanner final : fp::observable {
         std::unique_ptr<Msg> generate() {
             std::string s;
-            // IMPROVEMENT: Added validation to skip empty tokens or whitespace.
-            // This ensures the pipeline only processes meaningful data.
+            // Filtering at the source: skip empty/whitespace tokens
             while (std::cin >> s) {
-                if (!s.empty()) { 
+                if (!s.empty()) {
                     return std::make_unique<Msg>(std::move(s));
                 }
             }
-
-            if (std::cin.bad()) {
-                throw std::runtime_error("stdin I/O error");
-            }
-            return nullptr; // EOF
+            if (std::cin.bad()) throw std::runtime_error("stdin I/O error");
+            return nullptr; 
         }
     };
 
     struct Printer final : fp::observer {
+        // notify remains non-const because it represents an 'action' 
+        // that conceptually modifies the state of the observer/output.
         void notify(const Msg& d) override {
-            // Using '\n' with an explicit flush is often faster than std::endl
-            // while still ensuring the user sees the output.
-            std::cout << d.get() << "\n" << std::flush;
+            std::cout << d.get() << "\n";
         }
     };
 
     fp::flowpp_engine engine;
 
-    // Component instantiation
     auto scanner = engine.instantiate<Scanner>();
     auto counter = engine.instantiate<fp::counter>();
     auto printer = engine.instantiate<Printer>();
 
-    // Pipeline setup
     scanner->subscribe(counter);
     counter->subscribe(printer);
 
     engine.run();
 
-    // Final result output
+    // IMPROVEMENT: Ensuring we access data via a clear, read-only 
+    // interface. In a real fp::counter, get() should be: 
+    // size_t get() const { return count_; }
     std::cout << "--- Processed Tokens: " << counter->get() << " ---\n";
     
     return 0;
