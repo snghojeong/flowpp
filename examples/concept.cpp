@@ -7,6 +7,7 @@
 namespace fp = flowpp;
 
 int main() try {
+    // Optimization: Fast I/O
     std::ios::sync_with_stdio(false);
     std::cin.tie(nullptr);
 
@@ -15,7 +16,7 @@ int main() try {
     struct Scanner final : fp::observable {
         std::unique_ptr<Msg> generate() {
             std::string s;
-            // Filtering at the source: skip empty/whitespace tokens
+            // Logic: Skip empty tokens and handle EOF/Errors cleanly
             while (std::cin >> s) {
                 if (!s.empty()) {
                     return std::make_unique<Msg>(std::move(s));
@@ -27,27 +28,34 @@ int main() try {
     };
 
     struct Printer final : fp::observer {
-        // notify remains non-const because it represents an 'action' 
-        // that conceptually modifies the state of the observer/output.
-        void notify(const Msg& d) override {
-            std::cout << d.get() << "\n";
+        // IMPROVEMENT: Added 'noexcept'. In reactive streams, the "Sink" 
+        // should ideally handle its own errors or signal 'noexcept' so 
+        // the engine can use optimized dispatching.
+        void notify(const Msg& d) noexcept override {
+            // Using \n is faster than std::endl because it avoids 
+            // repetitive, expensive hardware flushes.
+            std::cout << d.get() << '\n';
         }
     };
 
     fp::flowpp_engine engine;
 
+    // Component instantiation managed by the engine
     auto scanner = engine.instantiate<Scanner>();
     auto counter = engine.instantiate<fp::counter>();
     auto printer = engine.instantiate<Printer>();
 
+    // Pipeline setup
     scanner->subscribe(counter);
     counter->subscribe(printer);
 
+    // Execution
     engine.run();
 
-    // IMPROVEMENT: Ensuring we access data via a clear, read-only 
-    // interface. In a real fp::counter, get() should be: 
-    // size_t get() const { return count_; }
+    // IMPROVEMENT: Explicitly flush once at the very end.
+    // This ensures all buffered 'notify' data hits the terminal.
+    std::cout << std::flush;
+
     std::cout << "--- Processed Tokens: " << counter->get() << " ---\n";
     
     return 0;
