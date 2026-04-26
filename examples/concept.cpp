@@ -1,7 +1,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include <string_view> // IMPROVEMENT: For efficient, non-owning string access
+#include <string_view>
 #include <stdexcept>
 
 // Assuming flowpp is a placeholder for a reactive framework
@@ -14,7 +14,9 @@ int main() try {
     using Msg = fp::data<std::string>;
 
     struct Scanner final : fp::observable {
-        std::unique_ptr<Msg> generate() {
+        // IMPROVEMENT: [[nodiscard]] ensures that every generated message 
+        // must be handled (processed or moved), preventing accidental data loss.
+        [[nodiscard]] std::unique_ptr<Msg> generate() {
             std::string s;
             while (std::cin >> s) {
                 if (!s.empty()) {
@@ -27,8 +29,6 @@ int main() try {
     };
 
     struct Printer final : fp::observer {
-        // IMPROVEMENT: Use std::string_view if the Msg::get() allows it,
-        // or simply ensure we treat the result as a view to prevent copies.
         void notify(const Msg& d) noexcept override {
             const std::string_view view = d.get(); 
             std::cout << view << '\n';
