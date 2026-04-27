@@ -12,11 +12,12 @@ int main() try {
     std::cin.tie(nullptr);
 
     using Msg = fp::data<std::string>;
+    // IMPROVEMENT: Alias the pointer type. This clarifies intent and 
+    // makes the 'generate' signature much cleaner.
+    using MsgPtr = std::unique_ptr<Msg>;
 
     struct Scanner final : fp::observable {
-        // IMPROVEMENT: [[nodiscard]] ensures that every generated message 
-        // must be handled (processed or moved), preventing accidental data loss.
-        [[nodiscard]] std::unique_ptr<Msg> generate() {
+        [[nodiscard]] MsgPtr generate() {
             std::string s;
             while (std::cin >> s) {
                 if (!s.empty()) {
@@ -46,10 +47,10 @@ int main() try {
     scanner->subscribe(counter);
     counter->subscribe(printer);
 
-    // Run the reactive engine
+    // Execution
     engine.run();
 
-    // Final output management
+    // Cleanup and Reporting
     std::cout << std::flush;
     std::cout << "--- Processed Tokens: " << counter->get() << " ---\n";
     
