@@ -3,6 +3,7 @@
 #include <string>
 #include <string_view>
 #include <stdexcept>
+#include <cstdlib> // IMPROVEMENT: For EXIT_FAILURE and EXIT_SUCCESS
 
 // Assuming flowpp is a placeholder for a reactive framework
 namespace fp = flowpp;
@@ -12,8 +13,6 @@ int main() try {
     std::cin.tie(nullptr);
 
     using Msg = fp::data<std::string>;
-    // IMPROVEMENT: Alias the pointer type. This clarifies intent and 
-    // makes the 'generate' signature much cleaner.
     using MsgPtr = std::unique_ptr<Msg>;
 
     struct Scanner final : fp::observable {
@@ -38,25 +37,23 @@ int main() try {
 
     fp::flowpp_engine engine;
 
-    // Component instantiation
     auto scanner = engine.instantiate<Scanner>();
     auto counter = engine.instantiate<fp::counter>();
     auto printer = engine.instantiate<Printer>();
 
-    // Pipeline setup
     scanner->subscribe(counter);
     counter->subscribe(printer);
 
-    // Execution
     engine.run();
 
-    // Cleanup and Reporting
     std::cout << std::flush;
     std::cout << "--- Processed Tokens: " << counter->get() << " ---\n";
     
-    return 0;
+    return EXIT_SUCCESS; // IMPROVEMENT: Semantic return code
 
 } catch (const std::exception& e) {
-    std::cerr << "Fatal Error: " << e.what() << '\n';
-    return 1;
+    // IMPROVEMENT: Using std::endl here is appropriate to force a flush 
+    // during a critical failure so the user sees the error before termination.
+    std::cerr << "Fatal Error: " << e.what() << std::endl;
+    return EXIT_FAILURE; // IMPROVEMENT: Standardized error signaling
 }
