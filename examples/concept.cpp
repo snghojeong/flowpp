@@ -1,70 +1,104 @@
+
+#include <cstdlib>
+#include <exception>
 #include <iostream>
 #include <memory>
 #include <string>
-#include <string_view>
-#include <stdexcept>
-#include <cstdlib>
+#include <utility>
 
-// Assuming flowpp is a placeholder for a reactive framework
+// Include the actual flowpp framework header.
+// #include <flowpp/flowpp.hpp>
+
 namespace fp = flowpp;
 
-int main() try {
-    // Optimization: Standard Fast I/O setup
+namespace {
+
+using Message = fp::data<std::string>;
+using MessagePtr = std::unique_ptr<Message>;
+
+class Scanner final : public fp::observable {
+public:
+    [[nodiscard]] MessagePtr generate() override {
+        std::string token;
+
+        if (!(std::cin >> token)) {
+            if (std::cin.bad()) {
+                throw std::ios_base::failure(
+                    "Failed to read standard input"
+                );
+            }
+
+            // EOF or extraction failure terminates the source.
+            return nullptr;
+        }
+
+        return std::make_unique<Message>(std::move(token));
+    }
+};
+
+class Printer final : public fp::observer {
+public:
+    void notify(const Message& message) override {
+        std::cout << message.get() << '\n';
+
+        if (!std::cout) {
+            throw std::ios_base::failure(
+                "Failed to write standard output"
+            );
+        }
+    }
+};
+
+void configure_io() {
     std::ios::sync_with_stdio(false);
     std::cin.tie(nullptr);
+}
 
-    using Msg = fp::data<std::string>;
-    using MsgPtr = std::unique_ptr<Msg>;
+void print_summary(std::size_t count) {
+    std::cout
+        << "\n--- Execution Summary ---\n"
+        << "Tokens Processed: " << count << '\n'
+        << "Status: Success\n";
 
-    // IMPROVEMENT: Moving logic into a cohesive internal structure 
-    // or using 'final' to allow the compiler to devirtualize calls.
-    struct Scanner final : fp::observable {
-        [[nodiscard]] MsgPtr generate() override {
-            std::string s;
-            // Combined skip-whitespace and extraction
-            if (!(std::cin >> std::ws >> s)) {
-                if (std::cin.bad()) throw std::runtime_error("Fatal stdin I/O error");
-                return nullptr; // EOF/Termination signal
-            }
-            return std::make_unique<Msg>(std::move(s));
-        }
-    };
+    std::cout.flush();
 
-    struct Printer final : fp::observer {
-        // IMPROVEMENT: Using 'const' and 'noexcept' consistently 
-        // to ensure the pipeline never breaks during the sink phase.
-        void notify(const Msg& d) noexcept override {
-            std::cout << d.get() << '\n';
-        }
-    };
+    if (!std::cout) {
+        throw std::ios_base::failure(
+            "Failed to write execution summary"
+        );
+    }
+}
+
+int run() {
+    configure_io();
 
     fp::flowpp_engine engine;
 
-    // Component instantiation
     auto scanner = engine.instantiate<Scanner>();
     auto counter = engine.instantiate<fp::counter>();
     auto printer = engine.instantiate<Printer>();
 
-    // Pipeline setup: Scanner -> Counter -> Printer
-    // IMPROVEMENT: If the framework supports it, chain these. 
-    // Otherwise, this explicit subscription is clear and safe.
     scanner->subscribe(counter);
     counter->subscribe(printer);
 
-    // Start the reactive processing loop
     engine.run();
 
-    // Final Report Management
-    // IMPROVEMENT: Use a single '\n' before the summary to ensure 
-    // a clear visual break from the streamed data.
-    std::cout << "\n--- Execution Summary ---\n"
-              << "Tokens Processed: " << counter->get() << "\n"
-              << "Status: Success" << std::endl;
-    
-    return EXIT_SUCCESS;
+    print_summary(counter->get());
 
-} catch (const std::exception& e) {
-    // Use std::endl here to force flush during failure
-    std::cerr << "Application Error: " << e.what() << std::endl;
-    return EXIT_FAILURE;
+    return EXIT_SUCCESS;
+}
+
+} // namespace
+
+int main() {
+    try {
+        return run();
+    } catch (const std::exception& e) {
+        std::cerr << "Application error: "
+                  << e.what() << '\n';
+        return EXIT_FAILURE;
+    } catch (...) {
+        std::cerr << "Unknown application error\n";
+        return EXIT_FAILURE;
+    }
 }
