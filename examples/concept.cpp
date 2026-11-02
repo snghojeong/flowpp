@@ -6,7 +6,7 @@
 #include <string>
 #include <utility>
 
-// Include the actual flowpp framework header.
+// Replace with the actual flowpp framework header.
 // #include <flowpp/flowpp.hpp>
 
 namespace fp = flowpp;
@@ -28,7 +28,7 @@ public:
                 );
             }
 
-            // EOF or extraction failure terminates the source.
+            // EOF or input failure terminates the source.
             return nullptr;
         }
 
@@ -54,7 +54,8 @@ void configure_io() {
     std::cin.tie(nullptr);
 }
 
-void print_summary(std::size_t count) {
+template <typename Count>
+void print_summary(const Count& count) {
     std::cout
         << "\n--- Execution Summary ---\n"
         << "Tokens Processed: " << count << '\n'
@@ -78,11 +79,14 @@ int run() {
     auto counter = engine.instantiate<fp::counter>();
     auto printer = engine.instantiate<Printer>();
 
+    // Scanner -> Counter -> Printer
     scanner->subscribe(counter);
     counter->subscribe(printer);
 
+    // Execute the reactive pipeline.
     engine.run();
 
+    // Report the total number of processed tokens.
     print_summary(counter->get());
 
     return EXIT_SUCCESS;
@@ -94,11 +98,15 @@ int main() {
     try {
         return run();
     } catch (const std::exception& e) {
-        std::cerr << "Application error: "
-                  << e.what() << '\n';
+        std::cerr
+            << "Application error: "
+            << e.what() << '\n';
+
         return EXIT_FAILURE;
     } catch (...) {
-        std::cerr << "Unknown application error\n";
+        std::cerr
+            << "Unknown application error\n";
+
         return EXIT_FAILURE;
     }
 }
