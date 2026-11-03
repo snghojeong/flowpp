@@ -1,6 +1,7 @@
 
 #include <cstdlib>
 #include <exception>
+#include <ios>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -21,18 +22,28 @@ public:
     [[nodiscard]] MessagePtr generate() override {
         std::string token;
 
-        if (!(std::cin >> token)) {
-            if (std::cin.bad()) {
-                throw std::ios_base::failure(
-                    "Failed to read standard input"
-                );
-            }
+        if (std::cin >> token) {
+            return std::make_unique<Message>(
+                std::move(token)
+            );
+        }
 
-            // EOF or input failure terminates the source.
+        // A physical I/O error takes precedence over EOF.
+        if (std::cin.bad()) {
+            throw std::ios_base::failure(
+                "Fatal standard input I/O error"
+            );
+        }
+
+        // Normal end of input.
+        if (std::cin.eof()) {
             return nullptr;
         }
 
-        return std::make_unique<Message>(std::move(token));
+        // Unexpected extraction failure.
+        throw std::ios_base::failure(
+            "Unexpected standard input failure"
+        );
     }
 };
 
@@ -79,14 +90,15 @@ int run() {
     auto counter = engine.instantiate<fp::counter>();
     auto printer = engine.instantiate<Printer>();
 
+    // Configure the reactive pipeline.
     // Scanner -> Counter -> Printer
     scanner->subscribe(counter);
     counter->subscribe(printer);
 
-    // Execute the reactive pipeline.
+    // Process input until Scanner signals EOF.
     engine.run();
 
-    // Report the total number of processed tokens.
+    // Report the number of processed tokens.
     print_summary(counter->get());
 
     return EXIT_SUCCESS;
