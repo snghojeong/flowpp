@@ -67,14 +67,15 @@ void configure_io() {
 
 template <typename Count>
 void print_summary(const Count& count) {
-    std::cout
+    // Diagnostics belong on stderr, not stdout.
+    std::cerr
         << "\n--- Execution Summary ---\n"
         << "Tokens Processed: " << count << '\n'
         << "Status: Success\n";
 
-    std::cout.flush();
+    std::cerr.flush();
 
-    if (!std::cout) {
+    if (!std::cerr) {
         throw std::ios_base::failure(
             "Failed to write execution summary"
         );
@@ -98,7 +99,17 @@ int run() {
     // Process input until Scanner signals EOF.
     engine.run();
 
-    // Report the number of processed tokens.
+    // Ensure all processed output is written before
+    // reporting successful completion.
+    std::cout.flush();
+
+    if (!std::cout) {
+        throw std::ios_base::failure(
+            "Failed to flush standard output"
+        );
+    }
+
+    // Report statistics separately from application data.
     print_summary(counter->get());
 
     return EXIT_SUCCESS;
