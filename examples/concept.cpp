@@ -3,7 +3,9 @@
 #include <exception>
 #include <ios>
 #include <iostream>
+#include <istream>
 #include <memory>
+#include <ostream>
 #include <string>
 #include <utility>
 
@@ -19,45 +21,55 @@ using MessagePtr = std::unique_ptr<Message>;
 
 class Scanner final : public fp::observable {
 public:
+    explicit Scanner(std::istream& input) noexcept
+        : input_(input) {}
+
     [[nodiscard]] MessagePtr generate() override {
         std::string token;
 
-        if (std::cin >> token) {
+        if (input_ >> token) {
             return std::make_unique<Message>(
                 std::move(token)
             );
         }
 
-        // A physical I/O error takes precedence over EOF.
-        if (std::cin.bad()) {
+        // Physical I/O errors take precedence over EOF.
+        if (input_.bad()) {
             throw std::ios_base::failure(
-                "Fatal standard input I/O error"
+                "Fatal input I/O error"
             );
         }
 
-        // Normal end of input.
-        if (std::cin.eof()) {
+        if (input_.eof()) {
             return nullptr;
         }
 
-        // Unexpected extraction failure.
         throw std::ios_base::failure(
-            "Unexpected standard input failure"
+            "Unexpected input extraction failure"
         );
     }
+
+private:
+    std::istream& input_;
 };
 
 class Printer final : public fp::observer {
 public:
-    void notify(const Message& message) override {
-        std::cout << message.get() << '\n';
+    explicit Printer(std::ostream& output) noexcept
+        : output_(output) {}
 
-        if (!std::cout) {
+    void notify(const Message& message) override {
+        output_ << message.get() << '\n';
+
+        if (!output_) {
             throw std::ios_base::failure(
-                "Failed to write standard output"
+                "Failed to write output"
             );
         }
     }
+
+private:
+    std::ostream& output_;
 };
 
 void configure_io() {
@@ -66,51 +78,57 @@ void configure_io() {
 }
 
 template <typename Count>
-void print_summary(const Count& count) {
-    // Diagnostics belong on stderr, not stdout.
-    std::cerr
+void print_summary(
+    std::ostream& diagnostics,
+    const Count& count
+) {
+    diagnostics
         << "\n--- Execution Summary ---\n"
         << "Tokens Processed: " << count << '\n'
         << "Status: Success\n";
 
-    std::cerr.flush();
+    diagnostics.flush();
 
-    if (!std::cerr) {
+    if (!diagnostics) {
         throw std::ios_base::failure(
             "Failed to write execution summary"
         );
     }
 }
 
-int run() {
-    configure_io();
+void flush_output(std::ostream& output) {
+    output.flush();
 
+    if (!output) {
+        throw std::ios_base::failure(
+            "Failed to flush output"
+        );
+    }
+}
+
+int run(
+    std::istream& input,
+    std::ostream& output,
+    std::ostream& diagnostics
+) {
     fp::flowpp_engine engine;
 
-    auto scanner = engine.instantiate<Scanner>();
+    auto scanner = engine.instantiate<Scanner>(input);
     auto counter = engine.instantiate<fp::counter>();
-    auto printer = engine.instantiate<Printer>();
+    auto printer = engine.instantiate<Printer>(output);
 
-    // Configure the reactive pipeline.
     // Scanner -> Counter -> Printer
     scanner->subscribe(counter);
     counter->subscribe(printer);
 
-    // Process input until Scanner signals EOF.
+    // Process messages until EOF.
     engine.run();
 
-    // Ensure all processed output is written before
-    // reporting successful completion.
-    std::cout.flush();
+    // Ensure processed data is flushed before success.
+    flush_output(output);
 
-    if (!std::cout) {
-        throw std::ios_base::failure(
-            "Failed to flush standard output"
-        );
-    }
-
-    // Report statistics separately from application data.
-    print_summary(counter->get());
+    // Keep diagnostics separate from application data.
+    print_summary(diagnostics, counter->get());
 
     return EXIT_SUCCESS;
 }
@@ -119,7 +137,13 @@ int run() {
 
 int main() {
     try {
-        return run();
+        configure_io();
+
+        return run(
+            std::cin,
+            std::cout,
+            std::cerr
+        );
     } catch (const std::exception& e) {
         std::cerr
             << "Application error: "
