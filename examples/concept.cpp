@@ -27,19 +27,14 @@ public:
     [[nodiscard]] MessagePtr generate() override {
         std::string token;
 
+        // badbit automatically throws when enabled.
         if (input_ >> token) {
             return std::make_unique<Message>(
                 std::move(token)
             );
         }
 
-        // Physical I/O errors take precedence over EOF.
-        if (input_.bad()) {
-            throw std::ios_base::failure(
-                "Fatal input I/O error"
-            );
-        }
-
+        // EOF is the expected termination condition.
         if (input_.eof()) {
             return nullptr;
         }
@@ -59,22 +54,31 @@ public:
         : output_(output) {}
 
     void notify(const Message& message) override {
+        // failbit/badbit automatically throw.
         output_ << message.get() << '\n';
-
-        if (!output_) {
-            throw std::ios_base::failure(
-                "Failed to write output"
-            );
-        }
     }
 
 private:
     std::ostream& output_;
 };
 
-void configure_io() {
-    std::ios::sync_with_stdio(false);
-    std::cin.tie(nullptr);
+void configure_io(
+    std::istream& input,
+    std::ostream& output,
+    std::ostream& diagnostics
+) {
+    // EOF sets failbit during formatted extraction,
+    // so input must not throw on failbit.
+    input.exceptions(std::ios::badbit);
+
+    // Output failures should be reported immediately.
+    output.exceptions(
+        std::ios::badbit | std::ios::failbit
+    );
+
+    diagnostics.exceptions(
+        std::ios::badbit | std::ios::failbit
+    );
 }
 
 template <typename Count>
@@ -88,22 +92,6 @@ void print_summary(
         << "Status: Success\n";
 
     diagnostics.flush();
-
-    if (!diagnostics) {
-        throw std::ios_base::failure(
-            "Failed to write execution summary"
-        );
-    }
-}
-
-void flush_output(std::ostream& output) {
-    output.flush();
-
-    if (!output) {
-        throw std::ios_base::failure(
-            "Failed to flush output"
-        );
-    }
 }
 
 int run(
@@ -111,6 +99,8 @@ int run(
     std::ostream& output,
     std::ostream& diagnostics
 ) {
+    configure_io(input, output, diagnostics);
+
     fp::flowpp_engine engine;
 
     auto scanner = engine.instantiate<Scanner>(input);
@@ -124,10 +114,9 @@ int run(
     // Process messages until EOF.
     engine.run();
 
-    // Ensure processed data is flushed before success.
-    flush_output(output);
+    // Ensure output is flushed before reporting success.
+    output.flush();
 
-    // Keep diagnostics separate from application data.
     print_summary(diagnostics, counter->get());
 
     return EXIT_SUCCESS;
@@ -137,7 +126,8 @@ int run(
 
 int main() {
     try {
-        configure_io();
+        std::ios::sync_with_stdio(false);
+        std::cin.tie(nullptr);
 
         return run(
             std::cin,
