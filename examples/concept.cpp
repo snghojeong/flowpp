@@ -16,8 +16,61 @@ namespace fp = flowpp;
 
 namespace {
 
+// ------------------------------------------------------------
+// Message types
+// ------------------------------------------------------------
+
 using Message = fp::data<std::string>;
 using MessagePtr = std::unique_ptr<Message>;
+
+// ------------------------------------------------------------
+// RAII stream exception-mask guard
+// ------------------------------------------------------------
+
+class StreamExceptionGuard final {
+public:
+    StreamExceptionGuard(
+        std::ios& stream,
+        std::ios::iostate exception_mask
+    )
+        : stream_(stream),
+          original_mask_(stream.exceptions()) {
+        stream_.exceptions(exception_mask);
+    }
+
+    ~StreamExceptionGuard() noexcept {
+        try {
+            stream_.exceptions(original_mask_);
+        } catch (...) {
+            // Destructors must not propagate exceptions.
+            // The stream's error state is left intact.
+        }
+    }
+
+    StreamExceptionGuard(
+        const StreamExceptionGuard&
+    ) = delete;
+
+    StreamExceptionGuard& operator=(
+        const StreamExceptionGuard&
+    ) = delete;
+
+    StreamExceptionGuard(
+        StreamExceptionGuard&&
+    ) = delete;
+
+    StreamExceptionGuard& operator=(
+        StreamExceptionGuard&&
+    ) = delete;
+
+private:
+    std::ios& stream_;
+    std::ios::iostate original_mask_;
+};
+
+// ------------------------------------------------------------
+// Source: read whitespace-delimited tokens
+// ------------------------------------------------------------
 
 class Scanner final : public fp::observable {
 public:
@@ -27,14 +80,13 @@ public:
     [[nodiscard]] MessagePtr generate() override {
         std::string token;
 
-        // badbit automatically throws when enabled.
         if (input_ >> token) {
             return std::make_unique<Message>(
                 std::move(token)
             );
         }
 
-        // EOF is the expected termination condition.
+        // Normal EOF terminates the observable.
         if (input_.eof()) {
             return nullptr;
         }
@@ -48,13 +100,16 @@ private:
     std::istream& input_;
 };
 
+// ------------------------------------------------------------
+// Sink: write processed messages
+// ------------------------------------------------------------
+
 class Printer final : public fp::observer {
 public:
     explicit Printer(std::ostream& output) noexcept
         : output_(output) {}
 
     void notify(const Message& message) override {
-        // failbit/badbit automatically throw.
         output_ << message.get() << '\n';
     }
 
@@ -62,24 +117,9 @@ private:
     std::ostream& output_;
 };
 
-void configure_io(
-    std::istream& input,
-    std::ostream& output,
-    std::ostream& diagnostics
-) {
-    // EOF sets failbit during formatted extraction,
-    // so input must not throw on failbit.
-    input.exceptions(std::ios::badbit);
-
-    // Output failures should be reported immediately.
-    output.exceptions(
-        std::ios::badbit | std::ios::failbit
-    );
-
-    diagnostics.exceptions(
-        std::ios::badbit | std::ios::failbit
-    );
-}
+// ------------------------------------------------------------
+// Diagnostics
+// ------------------------------------------------------------
 
 template <typename Count>
 void print_summary(
@@ -94,12 +134,31 @@ void print_summary(
     diagnostics.flush();
 }
 
+// ------------------------------------------------------------
+// Reactive pipeline
+// ------------------------------------------------------------
+
 int run(
     std::istream& input,
     std::ostream& output,
     std::ostream& diagnostics
 ) {
-    configure_io(input, output, diagnostics);
+    // Automatically restore original exception masks
+    // when run() returns or throws.
+    StreamExceptionGuard input_guard(
+        input,
+        std::ios::badbit
+    );
+
+    StreamExceptionGuard output_guard(
+        output,
+        std::ios::badbit | std::ios::failbit
+    );
+
+    StreamExceptionGuard diagnostics_guard(
+        diagnostics,
+        std::ios::badbit | std::ios::failbit
+    );
 
     fp::flowpp_engine engine;
 
@@ -114,15 +173,20 @@ int run(
     // Process messages until EOF.
     engine.run();
 
-    // Ensure output is flushed before reporting success.
+    // Ensure application output is flushed first.
     output.flush();
 
+    // Report statistics separately.
     print_summary(diagnostics, counter->get());
 
     return EXIT_SUCCESS;
 }
 
 } // namespace
+
+// ------------------------------------------------------------
+// Application entry point
+// ------------------------------------------------------------
 
 int main() {
     try {
