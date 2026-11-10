@@ -6,6 +6,7 @@
 #include <istream>
 #include <memory>
 #include <ostream>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -42,8 +43,7 @@ public:
         try {
             stream_.exceptions(original_mask_);
         } catch (...) {
-            // Destructors must not propagate exceptions.
-            // The stream's error state is left intact.
+            // Preserve noexcept during stack unwinding.
         }
     }
 
@@ -67,6 +67,36 @@ private:
     std::ios& stream_;
     std::ios::iostate original_mask_;
 };
+
+// ------------------------------------------------------------
+// Validate stream configuration
+// ------------------------------------------------------------
+
+void validate_streams(
+    std::istream& input,
+    std::ostream& output,
+    std::ostream& diagnostics
+) {
+    // Compare the underlying basic_ios subobjects.
+    // This also works for bidirectional iostream objects.
+    const auto* input_stream =
+        static_cast<const std::ios*>(&input);
+
+    const auto* output_stream =
+        static_cast<const std::ios*>(&output);
+
+    const auto* diagnostics_stream =
+        static_cast<const std::ios*>(&diagnostics);
+
+    if (input_stream == output_stream ||
+        input_stream == diagnostics_stream ||
+        output_stream == diagnostics_stream) {
+        throw std::invalid_argument(
+            "Input, output, and diagnostic streams "
+            "must be distinct stream objects"
+        );
+    }
+}
 
 // ------------------------------------------------------------
 // Source: read whitespace-delimited tokens
@@ -143,8 +173,10 @@ int run(
     std::ostream& output,
     std::ostream& diagnostics
 ) {
-    // Automatically restore original exception masks
-    // when run() returns or throws.
+    // Validate before modifying stream configuration.
+    validate_streams(input, output, diagnostics);
+
+    // Restore exception masks automatically on exit.
     StreamExceptionGuard input_guard(
         input,
         std::ios::badbit
@@ -173,10 +205,10 @@ int run(
     // Process messages until EOF.
     engine.run();
 
-    // Ensure application output is flushed first.
+    // Flush application data before reporting success.
     output.flush();
 
-    // Report statistics separately.
+    // Keep execution statistics separate from data.
     print_summary(diagnostics, counter->get());
 
     return EXIT_SUCCESS;
