@@ -17,15 +17,11 @@ namespace fp = flowpp;
 
 namespace {
 
-// ------------------------------------------------------------
-// Message types
-// ------------------------------------------------------------
-
 using Message = fp::data<std::string>;
 using MessagePtr = std::unique_ptr<Message>;
 
 // ------------------------------------------------------------
-// RAII stream exception-mask guard
+// Transactional RAII stream exception-mask guard
 // ------------------------------------------------------------
 
 class StreamExceptionGuard final {
@@ -36,15 +32,18 @@ public:
     )
         : stream_(stream),
           original_mask_(stream.exceptions()) {
-        stream_.exceptions(exception_mask);
+        try {
+            stream_.exceptions(exception_mask);
+        } catch (...) {
+            // Restore the original exception mask if
+            // configuration fails during construction.
+            restore();
+            throw;
+        }
     }
 
     ~StreamExceptionGuard() noexcept {
-        try {
-            stream_.exceptions(original_mask_);
-        } catch (...) {
-            // Preserve noexcept during stack unwinding.
-        }
+        restore();
     }
 
     StreamExceptionGuard(
@@ -64,12 +63,22 @@ public:
     ) = delete;
 
 private:
+    void restore() noexcept {
+        try {
+            stream_.exceptions(original_mask_);
+        } catch (...) {
+            // exceptions(mask) updates the mask before
+            // potentially throwing because of rdstate().
+            // Never propagate from cleanup.
+        }
+    }
+
     std::ios& stream_;
     std::ios::iostate original_mask_;
 };
 
 // ------------------------------------------------------------
-// Validate stream configuration
+// Stream validation
 // ------------------------------------------------------------
 
 void validate_streams(
@@ -77,8 +86,6 @@ void validate_streams(
     std::ostream& output,
     std::ostream& diagnostics
 ) {
-    // Compare the underlying basic_ios subobjects.
-    // This also works for bidirectional iostream objects.
     const auto* input_stream =
         static_cast<const std::ios*>(&input);
 
@@ -99,7 +106,7 @@ void validate_streams(
 }
 
 // ------------------------------------------------------------
-// Source: read whitespace-delimited tokens
+// Source: whitespace-delimited token scanner
 // ------------------------------------------------------------
 
 class Scanner final : public fp::observable {
@@ -116,7 +123,7 @@ public:
             );
         }
 
-        // Normal EOF terminates the observable.
+        // Normal EOF terminates the source.
         if (input_.eof()) {
             return nullptr;
         }
@@ -131,7 +138,7 @@ private:
 };
 
 // ------------------------------------------------------------
-// Sink: write processed messages
+// Sink: processed message printer
 // ------------------------------------------------------------
 
 class Printer final : public fp::observer {
@@ -148,7 +155,7 @@ private:
 };
 
 // ------------------------------------------------------------
-// Diagnostics
+// Execution summary
 // ------------------------------------------------------------
 
 template <typename Count>
@@ -173,10 +180,11 @@ int run(
     std::ostream& output,
     std::ostream& diagnostics
 ) {
-    // Validate before modifying stream configuration.
+    // Reject conflicting stream configurations.
     validate_streams(input, output, diagnostics);
 
-    // Restore exception masks automatically on exit.
+    // Each guard restores its original mask on exit.
+    // Construction is also exception-safe.
     StreamExceptionGuard input_guard(
         input,
         std::ios::badbit
@@ -202,13 +210,13 @@ int run(
     scanner->subscribe(counter);
     counter->subscribe(printer);
 
-    // Process messages until EOF.
+    // Execute until Scanner signals EOF.
     engine.run();
 
-    // Flush application data before reporting success.
+    // Flush processed data before reporting success.
     output.flush();
 
-    // Keep execution statistics separate from data.
+    // Report statistics separately from application data.
     print_summary(diagnostics, counter->get());
 
     return EXIT_SUCCESS;
