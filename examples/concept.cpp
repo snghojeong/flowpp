@@ -21,61 +21,107 @@ using Message = fp::data<std::string>;
 using MessagePtr = std::unique_ptr<Message>;
 
 // ------------------------------------------------------------
-// Transactional RAII stream exception-mask guard
+// Input source
 // ------------------------------------------------------------
 
-class StreamExceptionGuard final {
+class Scanner final : public fp::observable {
 public:
-    StreamExceptionGuard(
-        std::ios& stream,
-        std::ios::iostate exception_mask
-    )
-        : stream_(stream),
-          original_mask_(stream.exceptions()) {
+    explicit Scanner(std::istream& input) noexcept
+        : input_(input) {}
+
+    [[nodiscard]] MessagePtr generate() override {
+        std::string token;
+
         try {
-            stream_.exceptions(exception_mask);
-        } catch (...) {
-            // Restore the original exception mask if
-            // configuration fails during construction.
-            restore();
-            throw;
+            if (input_ >> token) {
+                return std::make_unique<Message>(
+                    std::move(token)
+                );
+            }
+        } catch (const std::ios_base::failure&) {
+            // A configured exception mask may throw on EOF.
+            // Physical I/O errors must not be mistaken for EOF.
+            if (input_.bad() || !input_.eof()) {
+                throw;
+            }
+
+            return nullptr;
         }
+
+        if (input_.bad()) {
+            throw std::ios_base::failure(
+                "Fatal input I/O error"
+            );
+        }
+
+        if (input_.eof()) {
+            return nullptr;
+        }
+
+        throw std::ios_base::failure(
+            "Unexpected input extraction failure"
+        );
     }
-
-    ~StreamExceptionGuard() noexcept {
-        restore();
-    }
-
-    StreamExceptionGuard(
-        const StreamExceptionGuard&
-    ) = delete;
-
-    StreamExceptionGuard& operator=(
-        const StreamExceptionGuard&
-    ) = delete;
-
-    StreamExceptionGuard(
-        StreamExceptionGuard&&
-    ) = delete;
-
-    StreamExceptionGuard& operator=(
-        StreamExceptionGuard&&
-    ) = delete;
 
 private:
-    void restore() noexcept {
-        try {
-            stream_.exceptions(original_mask_);
-        } catch (...) {
-            // exceptions(mask) updates the mask before
-            // potentially throwing because of rdstate().
-            // Never propagate from cleanup.
+    std::istream& input_;
+};
+
+// ------------------------------------------------------------
+// Output sink
+// ------------------------------------------------------------
+
+class Printer final : public fp::observer {
+public:
+    explicit Printer(std::ostream& output) noexcept
+        : output_(output) {}
+
+    void notify(const Message& message) override {
+        output_ << message.get() << '\n';
+
+        if (!output_) {
+            throw std::ios_base::failure(
+                "Failed to write output"
+            );
         }
     }
 
-    std::ios& stream_;
-    std::ios::iostate original_mask_;
+private:
+    std::ostream& output_;
 };
+
+// ------------------------------------------------------------
+// Output helpers
+// ------------------------------------------------------------
+
+void flush_output(std::ostream& output) {
+    output.flush();
+
+    if (!output) {
+        throw std::ios_base::failure(
+            "Failed to flush output"
+        );
+    }
+}
+
+template <typename Count>
+void print_summary(
+    std::ostream& diagnostics,
+    const Count& count
+) {
+    diagnostics
+        << "\n--- Execution Summary ---\n"
+        << "Tokens Processed: " << count << '\n'
+        << "Status: Success\n";
+
+    diagnostics.flush();
+
+    if (!diagnostics) {
+        throw std::ios_base::failure(
+            "Failed to write execution summary"
+        );
+    }
+}
 
 // ------------------------------------------------------------
 // Stream validation
@@ -106,72 +152,6 @@ void validate_streams(
 }
 
 // ------------------------------------------------------------
-// Source: whitespace-delimited token scanner
-// ------------------------------------------------------------
-
-class Scanner final : public fp::observable {
-public:
-    explicit Scanner(std::istream& input) noexcept
-        : input_(input) {}
-
-    [[nodiscard]] MessagePtr generate() override {
-        std::string token;
-
-        if (input_ >> token) {
-            return std::make_unique<Message>(
-                std::move(token)
-            );
-        }
-
-        // Normal EOF terminates the source.
-        if (input_.eof()) {
-            return nullptr;
-        }
-
-        throw std::ios_base::failure(
-            "Unexpected input extraction failure"
-        );
-    }
-
-private:
-    std::istream& input_;
-};
-
-// ------------------------------------------------------------
-// Sink: processed message printer
-// ------------------------------------------------------------
-
-class Printer final : public fp::observer {
-public:
-    explicit Printer(std::ostream& output) noexcept
-        : output_(output) {}
-
-    void notify(const Message& message) override {
-        output_ << message.get() << '\n';
-    }
-
-private:
-    std::ostream& output_;
-};
-
-// ------------------------------------------------------------
-// Execution summary
-// ------------------------------------------------------------
-
-template <typename Count>
-void print_summary(
-    std::ostream& diagnostics,
-    const Count& count
-) {
-    diagnostics
-        << "\n--- Execution Summary ---\n"
-        << "Tokens Processed: " << count << '\n'
-        << "Status: Success\n";
-
-    diagnostics.flush();
-}
-
-// ------------------------------------------------------------
 // Reactive pipeline
 // ------------------------------------------------------------
 
@@ -180,25 +160,7 @@ int run(
     std::ostream& output,
     std::ostream& diagnostics
 ) {
-    // Reject conflicting stream configurations.
     validate_streams(input, output, diagnostics);
-
-    // Each guard restores its original mask on exit.
-    // Construction is also exception-safe.
-    StreamExceptionGuard input_guard(
-        input,
-        std::ios::badbit
-    );
-
-    StreamExceptionGuard output_guard(
-        output,
-        std::ios::badbit | std::ios::failbit
-    );
-
-    StreamExceptionGuard diagnostics_guard(
-        diagnostics,
-        std::ios::badbit | std::ios::failbit
-    );
 
     fp::flowpp_engine engine;
 
@@ -210,13 +172,13 @@ int run(
     scanner->subscribe(counter);
     counter->subscribe(printer);
 
-    // Execute until Scanner signals EOF.
+    // Process tokens until EOF.
     engine.run();
 
-    // Flush processed data before reporting success.
-    output.flush();
+    // Flush application data before reporting success.
+    flush_output(output);
 
-    // Report statistics separately from application data.
+    // Keep execution statistics separate from data.
     print_summary(diagnostics, counter->get());
 
     return EXIT_SUCCESS;
