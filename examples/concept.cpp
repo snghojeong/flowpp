@@ -39,8 +39,8 @@ public:
                 );
             }
         } catch (const std::ios_base::failure&) {
-            // A configured exception mask may throw on EOF.
-            // Physical I/O errors must not be mistaken for EOF.
+            // failbit exceptions may occur at normal EOF.
+            // Never suppress a physical I/O failure.
             if (input_.bad() || !input_.eof()) {
                 throw;
             }
@@ -149,6 +149,27 @@ void validate_streams(
             "must be distinct stream objects"
         );
     }
+
+    // Reject streams that are already in an error state.
+    // A valid empty stream is still accepted: EOF is only
+    // discovered when the first extraction is attempted.
+    if (!input.good()) {
+        throw std::ios_base::failure(
+            "Input stream is not ready for reading"
+        );
+    }
+
+    if (!output.good()) {
+        throw std::ios_base::failure(
+            "Output stream is not ready for writing"
+        );
+    }
+
+    if (!diagnostics.good()) {
+        throw std::ios_base::failure(
+            "Diagnostic stream is not ready for writing"
+        );
+    }
 }
 
 // ------------------------------------------------------------
@@ -160,6 +181,7 @@ int run(
     std::ostream& output,
     std::ostream& diagnostics
 ) {
+    // Validate before constructing the pipeline.
     validate_streams(input, output, diagnostics);
 
     fp::flowpp_engine engine;
@@ -175,10 +197,10 @@ int run(
     // Process tokens until EOF.
     engine.run();
 
-    // Flush application data before reporting success.
+    // Flush processed data before reporting success.
     flush_output(output);
 
-    // Keep execution statistics separate from data.
+    // Report statistics separately from application data.
     print_summary(diagnostics, counter->get());
 
     return EXIT_SUCCESS;
