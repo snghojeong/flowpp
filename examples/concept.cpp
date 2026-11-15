@@ -30,6 +30,11 @@ public:
         : input_(input) {}
 
     [[nodiscard]] MessagePtr generate() override {
+        // Once EOF has been observed, never read again.
+        if (finished_) {
+            return nullptr;
+        }
+
         std::string token;
 
         try {
@@ -39,12 +44,14 @@ public:
                 );
             }
         } catch (const std::ios_base::failure&) {
-            // failbit exceptions may occur at normal EOF.
-            // Never suppress a physical I/O failure.
+            // An exception may occur at normal EOF when
+            // the stream has failbit exceptions enabled.
+            // Physical I/O failures must still propagate.
             if (input_.bad() || !input_.eof()) {
                 throw;
             }
 
+            finished_ = true;
             return nullptr;
         }
 
@@ -55,6 +62,7 @@ public:
         }
 
         if (input_.eof()) {
+            finished_ = true;
             return nullptr;
         }
 
@@ -65,6 +73,7 @@ public:
 
 private:
     std::istream& input_;
+    bool finished_ = false;
 };
 
 // ------------------------------------------------------------
@@ -150,9 +159,6 @@ void validate_streams(
         );
     }
 
-    // Reject streams that are already in an error state.
-    // A valid empty stream is still accepted: EOF is only
-    // discovered when the first extraction is attempted.
     if (!input.good()) {
         throw std::ios_base::failure(
             "Input stream is not ready for reading"
@@ -181,7 +187,7 @@ int run(
     std::ostream& output,
     std::ostream& diagnostics
 ) {
-    // Validate before constructing the pipeline.
+    // Validate streams before constructing the pipeline.
     validate_streams(input, output, diagnostics);
 
     fp::flowpp_engine engine;
@@ -197,10 +203,10 @@ int run(
     // Process tokens until EOF.
     engine.run();
 
-    // Flush processed data before reporting success.
+    // Flush application data before reporting success.
     flush_output(output);
 
-    // Report statistics separately from application data.
+    // Keep statistics separate from application data.
     print_summary(diagnostics, counter->get());
 
     return EXIT_SUCCESS;
