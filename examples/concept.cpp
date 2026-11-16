@@ -30,9 +30,17 @@ public:
         : input_(input) {}
 
     [[nodiscard]] MessagePtr generate() override {
-        // Once EOF has been observed, never read again.
-        if (finished_) {
-            return nullptr;
+        switch (state_) {
+            case State::Completed:
+                return nullptr;
+
+            case State::Failed:
+                throw std::logic_error(
+                    "Scanner is in a failed state"
+                );
+
+            case State::Active:
+                break;
         }
 
         std::string token;
@@ -43,37 +51,49 @@ public:
                     std::move(token)
                 );
             }
-        } catch (const std::ios_base::failure&) {
-            // An exception may occur at normal EOF when
-            // the stream has failbit exceptions enabled.
-            // Physical I/O failures must still propagate.
-            if (input_.bad() || !input_.eof()) {
-                throw;
+
+            if (input_.bad()) {
+                throw std::ios_base::failure(
+                    "Fatal input I/O error"
+                );
             }
 
-            finished_ = true;
-            return nullptr;
-        }
+            if (input_.eof()) {
+                state_ = State::Completed;
+                return nullptr;
+            }
 
-        if (input_.bad()) {
             throw std::ios_base::failure(
-                "Fatal input I/O error"
+                "Unexpected input extraction failure"
             );
-        }
 
-        if (input_.eof()) {
-            finished_ = true;
-            return nullptr;
-        }
+        } catch (const std::ios_base::failure&) {
+            // failbit exceptions can occur at normal EOF.
+            if (!input_.bad() && input_.eof()) {
+                state_ = State::Completed;
+                return nullptr;
+            }
 
-        throw std::ios_base::failure(
-            "Unexpected input extraction failure"
-        );
+            state_ = State::Failed;
+            throw;
+
+        } catch (...) {
+            // Preserve failure state for all other errors,
+            // including allocation and construction failures.
+            state_ = State::Failed;
+            throw;
+        }
     }
 
 private:
+    enum class State {
+        Active,
+        Completed,
+        Failed
+    };
+
     std::istream& input_;
-    bool finished_ = false;
+    State state_ = State::Active;
 };
 
 // ------------------------------------------------------------
@@ -187,7 +207,6 @@ int run(
     std::ostream& output,
     std::ostream& diagnostics
 ) {
-    // Validate streams before constructing the pipeline.
     validate_streams(input, output, diagnostics);
 
     fp::flowpp_engine engine;
@@ -200,13 +219,12 @@ int run(
     scanner->subscribe(counter);
     counter->subscribe(printer);
 
-    // Process tokens until EOF.
     engine.run();
 
-    // Flush application data before reporting success.
+    // Flush processed data before reporting success.
     flush_output(output);
 
-    // Keep statistics separate from application data.
+    // Report statistics separately from application data.
     print_summary(diagnostics, counter->get());
 
     return EXIT_SUCCESS;
