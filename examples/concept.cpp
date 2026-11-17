@@ -35,21 +35,31 @@ public:
                 return nullptr;
 
             case State::Failed:
-                throw std::logic_error(
-                    "Scanner is in a failed state"
-                );
+                // Preserve the original failure information.
+                std::rethrow_exception(failure_);
 
             case State::Active:
                 break;
         }
 
-        std::string token;
-
         try {
-            if (input_ >> token) {
-                return std::make_unique<Message>(
-                    std::move(token)
-                );
+            std::string token;
+
+            try {
+                if (input_ >> token) {
+                    return std::make_unique<Message>(
+                        std::move(token)
+                    );
+                }
+            } catch (const std::ios_base::failure&) {
+                // An exception may indicate normal EOF when
+                // failbit exceptions are enabled.
+                if (input_.bad() || !input_.eof()) {
+                    throw;
+                }
+
+                state_ = State::Completed;
+                return nullptr;
             }
 
             if (input_.bad()) {
@@ -67,19 +77,10 @@ public:
                 "Unexpected input extraction failure"
             );
 
-        } catch (const std::ios_base::failure&) {
-            // failbit exceptions can occur at normal EOF.
-            if (!input_.bad() && input_.eof()) {
-                state_ = State::Completed;
-                return nullptr;
-            }
-
-            state_ = State::Failed;
-            throw;
-
         } catch (...) {
-            // Preserve failure state for all other errors,
-            // including allocation and construction failures.
+            // Preserve the original exception so repeated
+            // calls report the same underlying failure.
+            failure_ = std::current_exception();
             state_ = State::Failed;
             throw;
         }
@@ -94,6 +95,7 @@ private:
 
     std::istream& input_;
     State state_ = State::Active;
+    std::exception_ptr failure_;
 };
 
 // ------------------------------------------------------------
@@ -219,12 +221,13 @@ int run(
     scanner->subscribe(counter);
     counter->subscribe(printer);
 
+    // Process input until EOF.
     engine.run();
 
-    // Flush processed data before reporting success.
+    // Ensure application output is flushed first.
     flush_output(output);
 
-    // Report statistics separately from application data.
+    // Report statistics separately.
     print_summary(diagnostics, counter->get());
 
     return EXIT_SUCCESS;
