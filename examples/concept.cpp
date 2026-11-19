@@ -1,6 +1,5 @@
 
 #include <cstdlib>
-#include <exception>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
@@ -15,6 +14,13 @@ namespace fp = flowpp;
 namespace {
 
 using Message = fp::data<std::string>;
+
+// Centralized output validation.
+void check_output(std::ostream& output) {
+    if (!output) {
+        throw std::ios_base::failure("Output operation failed");
+    }
+}
 
 class Scanner final : public fp::observable {
 public:
@@ -32,8 +38,8 @@ public:
                 );
             }
         } catch (const std::ios_base::failure&) {
-            // A stream configured to throw on failbit
-            // may throw when reaching normal EOF.
+            // Normal EOF may throw if failbit exceptions
+            // are enabled on the input stream.
             if (input_.bad() || !input_.eof()) {
                 throw;
             }
@@ -41,9 +47,7 @@ public:
         }
 
         if (input_.bad() || !input_.eof()) {
-            throw std::ios_base::failure(
-                "Input read failed"
-            );
+            throw std::ios_base::failure("Input read failed");
         }
 
         return nullptr;
@@ -60,12 +64,7 @@ public:
 
     void notify(const Message& message) override {
         output_ << message.get() << '\n';
-
-        if (!output_) {
-            throw std::ios_base::failure(
-                "Output write failed"
-            );
-        }
+        check_output(output_);
     }
 
 private:
@@ -73,22 +72,14 @@ private:
 };
 
 template <typename Count>
-void print_summary(
-    std::ostream& diagnostics,
-    const Count& count
-) {
+void print_summary(std::ostream& diagnostics, const Count& count) {
     diagnostics
         << "\n--- Execution Summary ---\n"
         << "Tokens Processed: " << count << '\n'
         << "Status: Success\n";
 
     diagnostics.flush();
-
-    if (!diagnostics) {
-        throw std::ios_base::failure(
-            "Diagnostic output failed"
-        );
-    }
+    check_output(diagnostics);
 }
 
 void run(
@@ -96,12 +87,8 @@ void run(
     std::ostream& output,
     std::ostream& diagnostics
 ) {
-    if (!input.good() ||
-        !output.good() ||
-        !diagnostics.good()) {
-        throw std::ios_base::failure(
-            "Stream is not ready"
-        );
+    if (!input.good() || !output.good() || !diagnostics.good()) {
+        throw std::ios_base::failure("Stream is not ready");
     }
 
     fp::flowpp_engine engine;
@@ -116,11 +103,7 @@ void run(
     engine.run();
 
     output.flush();
-    if (!output) {
-        throw std::ios_base::failure(
-            "Output flush failed"
-        );
-    }
+    check_output(output);
 
     print_summary(diagnostics, counter->get());
 }
