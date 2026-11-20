@@ -15,7 +15,6 @@ namespace {
 
 using Message = fp::data<std::string>;
 
-// Centralized output validation.
 void check_output(std::ostream& output) {
     if (!output) {
         throw std::ios_base::failure("Output operation failed");
@@ -31,26 +30,17 @@ public:
     std::unique_ptr<Message> generate() override {
         std::string token;
 
-        try {
-            if (input_ >> token) {
-                return std::make_unique<Message>(
-                    std::move(token)
-                );
-            }
-        } catch (const std::ios_base::failure&) {
-            // Normal EOF may throw if failbit exceptions
-            // are enabled on the input stream.
-            if (input_.bad() || !input_.eof()) {
-                throw;
-            }
+        if (input_ >> token) {
+            return std::make_unique<Message>(
+                std::move(token)
+            );
+        }
+
+        if (input_.eof() && !input_.bad()) {
             return nullptr;
         }
 
-        if (input_.bad() || !input_.eof()) {
-            throw std::ios_base::failure("Input read failed");
-        }
-
-        return nullptr;
+        throw std::ios_base::failure("Input read failed");
     }
 
 private:
@@ -90,6 +80,9 @@ void run(
     if (!input.good() || !output.good() || !diagnostics.good()) {
         throw std::ios_base::failure("Stream is not ready");
     }
+
+    // Throw on physical input errors, but not normal EOF.
+    input.exceptions(std::ios::badbit);
 
     fp::flowpp_engine engine;
 
