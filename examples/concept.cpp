@@ -2,11 +2,10 @@
 #include <cstdlib>
 #include <iostream>
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <utility>
 
-// Replace with the actual framework header.
+// Replace with the actual flowpp header.
 // #include <flowpp/flowpp.hpp>
 
 namespace fp = flowpp;
@@ -15,9 +14,9 @@ namespace {
 
 using Message = fp::data<std::string>;
 
-void check_output(std::ostream& output) {
-    if (!output) {
-        throw std::ios_base::failure("Output operation failed");
+void check_output(std::ostream& stream) {
+    if (!stream) {
+        throw std::ios_base::failure("Output failed");
     }
 }
 
@@ -36,11 +35,11 @@ public:
             );
         }
 
-        if (input_.eof() && !input_.bad()) {
-            return nullptr;
+        if (input_.bad() || !input_.eof()) {
+            throw std::ios_base::failure("Input failed");
         }
 
-        throw std::ios_base::failure("Input read failed");
+        return nullptr;
     }
 
 private:
@@ -80,9 +79,6 @@ void run(
     if (!input.good() || !output.good() || !diagnostics.good()) {
         throw std::ios_base::failure("Stream is not ready");
     }
-
-    // Throw on physical input errors, but not normal EOF.
-    input.exceptions(std::ios::badbit);
 
     fp::flowpp_engine engine;
 
