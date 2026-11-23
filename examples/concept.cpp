@@ -14,12 +14,6 @@ namespace {
 
 using Message = fp::data<std::string>;
 
-void check_output(std::ostream& stream) {
-    if (!stream) {
-        throw std::ios_base::failure("Output failed");
-    }
-}
-
 class Scanner final : public fp::observable {
 public:
     explicit Scanner(std::istream& input)
@@ -53,23 +47,11 @@ public:
 
     void notify(const Message& message) override {
         output_ << message.get() << '\n';
-        check_output(output_);
     }
 
 private:
     std::ostream& output_;
 };
-
-template <typename Count>
-void print_summary(std::ostream& diagnostics, const Count& count) {
-    diagnostics
-        << "\n--- Execution Summary ---\n"
-        << "Tokens Processed: " << count << '\n'
-        << "Status: Success\n";
-
-    diagnostics.flush();
-    check_output(diagnostics);
-}
 
 void run(
     std::istream& input,
@@ -79,6 +61,10 @@ void run(
     if (!input.good() || !output.good() || !diagnostics.good()) {
         throw std::ios_base::failure("Stream is not ready");
     }
+
+    // Output errors throw automatically.
+    output.exceptions(std::ios::badbit | std::ios::failbit);
+    diagnostics.exceptions(std::ios::badbit | std::ios::failbit);
 
     fp::flowpp_engine engine;
 
@@ -92,9 +78,13 @@ void run(
     engine.run();
 
     output.flush();
-    check_output(output);
 
-    print_summary(diagnostics, counter->get());
+    diagnostics
+        << "\n--- Execution Summary ---\n"
+        << "Tokens Processed: " << counter->get() << '\n'
+        << "Status: Success\n";
+
+    diagnostics.flush();
 }
 
 } // namespace
