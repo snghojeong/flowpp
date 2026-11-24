@@ -1,5 +1,6 @@
 
 #include <cstdlib>
+#include <exception>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -62,9 +63,8 @@ void run(
         throw std::ios_base::failure("Stream is not ready");
     }
 
-    // Output errors throw automatically.
+    // Automatically detect application output failures.
     output.exceptions(std::ios::badbit | std::ios::failbit);
-    diagnostics.exceptions(std::ios::badbit | std::ios::failbit);
 
     fp::flowpp_engine engine;
 
@@ -77,14 +77,22 @@ void run(
 
     engine.run();
 
+    // Ensure all application output is written.
     output.flush();
 
+    // Diagnostics remain independent of output exceptions.
     diagnostics
         << "\n--- Execution Summary ---\n"
         << "Tokens Processed: " << counter->get() << '\n'
         << "Status: Success\n";
 
     diagnostics.flush();
+
+    if (!diagnostics) {
+        throw std::ios_base::failure(
+            "Diagnostic output failed"
+        );
+    }
 }
 
 } // namespace
@@ -98,8 +106,15 @@ int main() {
         return EXIT_SUCCESS;
 
     } catch (const std::exception& e) {
-        std::cerr << "Application error: "
-                  << e.what() << '\n';
+        // Best-effort error reporting.
+        // Avoid throwing another exception during failure.
+        try {
+            std::cerr << "Application error: "
+                      << e.what() << '\n';
+        } catch (...) {
+            // Nothing more can be reported safely.
+        }
+
         return EXIT_FAILURE;
     }
 }
