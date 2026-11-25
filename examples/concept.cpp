@@ -1,6 +1,5 @@
 
 #include <cstdlib>
-#include <exception>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -54,16 +53,12 @@ private:
     std::ostream& output_;
 };
 
-void run(
-    std::istream& input,
-    std::ostream& output,
-    std::ostream& diagnostics
-) {
-    if (!input.good() || !output.good() || !diagnostics.good()) {
+auto run(std::istream& input, std::ostream& output) {
+    if (!input.good() || !output.good()) {
         throw std::ios_base::failure("Stream is not ready");
     }
 
-    // Automatically detect application output failures.
+    // Detect output failures automatically.
     output.exceptions(std::ios::badbit | std::ios::failbit);
 
     fp::flowpp_engine engine;
@@ -76,23 +71,9 @@ void run(
     counter->subscribe(printer);
 
     engine.run();
-
-    // Ensure all application output is written.
     output.flush();
 
-    // Diagnostics remain independent of output exceptions.
-    diagnostics
-        << "\n--- Execution Summary ---\n"
-        << "Tokens Processed: " << counter->get() << '\n'
-        << "Status: Success\n";
-
-    diagnostics.flush();
-
-    if (!diagnostics) {
-        throw std::ios_base::failure(
-            "Diagnostic output failed"
-        );
-    }
+    return counter->get();
 }
 
 } // namespace
@@ -102,19 +83,22 @@ int main() {
         std::ios::sync_with_stdio(false);
         std::cin.tie(nullptr);
 
-        run(std::cin, std::cout, std::cerr);
+        const auto count = run(std::cin, std::cout);
+
+        std::cerr
+            << "\n--- Execution Summary ---\n"
+            << "Tokens Processed: " << count << '\n'
+            << "Status: Success\n";
+
+        if (!std::cerr) {
+            return EXIT_FAILURE;
+        }
+
         return EXIT_SUCCESS;
 
     } catch (const std::exception& e) {
-        // Best-effort error reporting.
-        // Avoid throwing another exception during failure.
-        try {
-            std::cerr << "Application error: "
-                      << e.what() << '\n';
-        } catch (...) {
-            // Nothing more can be reported safely.
-        }
-
+        std::cerr << "Application error: "
+                  << e.what() << '\n';
         return EXIT_FAILURE;
     }
 }
