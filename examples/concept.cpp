@@ -24,9 +24,7 @@ public:
         std::string token;
 
         if (input_ >> token) {
-            return std::make_unique<Message>(
-                std::move(token)
-            );
+            return std::make_unique<Message>(std::move(token));
         }
 
         if (input_.bad() || !input_.eof()) {
@@ -54,11 +52,7 @@ private:
 };
 
 auto run(std::istream& input, std::ostream& output) {
-    if (!input.good() || !output.good()) {
-        throw std::ios_base::failure("Stream is not ready");
-    }
-
-    // Detect output failures automatically.
+    // Report output failures automatically.
     output.exceptions(std::ios::badbit | std::ios::failbit);
 
     fp::flowpp_engine engine;
@@ -90,11 +84,9 @@ int main() {
             << "Tokens Processed: " << count << '\n'
             << "Status: Success\n";
 
-        if (!std::cerr) {
-            return EXIT_FAILURE;
-        }
+        std::cerr.flush();
 
-        return EXIT_SUCCESS;
+        return std::cerr ? EXIT_SUCCESS : EXIT_FAILURE;
 
     } catch (const std::exception& e) {
         std::cerr << "Application error: "
