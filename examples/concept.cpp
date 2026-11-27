@@ -1,4 +1,3 @@
-
 #include <cstdlib>
 #include <iostream>
 #include <memory>
@@ -45,6 +44,10 @@ public:
 
     void notify(const Message& message) override {
         output_ << message.get() << '\n';
+
+        if (!output_) {
+            throw std::ios_base::failure("Output failed");
+        }
     }
 
 private:
@@ -52,9 +55,6 @@ private:
 };
 
 auto run(std::istream& input, std::ostream& output) {
-    // Report output failures automatically.
-    output.exceptions(std::ios::badbit | std::ios::failbit);
-
     fp::flowpp_engine engine;
 
     auto scanner = engine.instantiate<Scanner>(input);
@@ -65,7 +65,12 @@ auto run(std::istream& input, std::ostream& output) {
     counter->subscribe(printer);
 
     engine.run();
+
     output.flush();
+
+    if (!output) {
+        throw std::ios_base::failure("Output flush failed");
+    }
 
     return counter->get();
 }
@@ -91,6 +96,7 @@ int main() {
     } catch (const std::exception& e) {
         std::cerr << "Application error: "
                   << e.what() << '\n';
+
         return EXIT_FAILURE;
     }
 }
