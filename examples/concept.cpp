@@ -22,8 +22,17 @@ public:
     std::unique_ptr<Message> generate() override {
         std::string token;
 
-        if (input_ >> token) {
-            return std::make_unique<Message>(std::move(token));
+        try {
+            if (input_ >> token) {
+                return std::make_unique<Message>(
+                    std::move(token)
+                );
+            }
+        } catch (const std::ios_base::failure&) {
+            // Only normal EOF is allowed to terminate input.
+            if (input_.bad() || !input_.eof()) {
+                throw;
+            }
         }
 
         if (input_.bad() || !input_.eof()) {
